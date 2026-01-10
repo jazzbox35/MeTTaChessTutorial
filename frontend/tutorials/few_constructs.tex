@@ -35,7 +35,7 @@ We'll use these in the chess game in the next section.
 
 Atomspace, where all MeTTa code and data reside, can be subdivided into sub-spaces. The default sub-space is known as \textbf{&self}. For this tutorial we'll just use \textbf{&self} although it is possible to create arbitrary spaces (eg., \textbf{&fancyatoms}). 
 
-After you run any example in this tutorial you can check your atomspace by clicking the button to display atomspace on top of each tutorial page. To tidy things up as you work through the examples click the button to reset atomspace. Refreshing your browser page will reset the examples and clear atomspace. Code boxes can also be reset individually and those with a challenge question will have a "Cheat" button if you just feel like displaying the answer.
+After you run any example in this tutorial you can check your atomspace by clicking the button to display atomspace on top of each tutorial page. To tidy things up as you work through the examples click the button to reset atomspace. Note that if you run a code box repeatedly that defines a function, the same function may be defined more than one -- if that happens it runs more than once. If it runs more than once you get duplicate results. So, please click "Reset Atomspace" if you get duplicate results. Code boxes can be reset individually and those with a challenge question will have a "Cheat" button if you just feel like displaying the answer.
 
 \subsection{Exclamation !}
 
@@ -182,16 +182,16 @@ Challenge: modify the test so that if it is cloudy, one stays in bed regardless 
 
 
 \begin{verbatim}
-(= (WeekendTest $day $time $conditions)
+(= (WeekendTest2 $day $time $conditions)
    (if ??? (and (== $day Sunday) (< $time 1000) ???)
       (stay in bed)
       (get up)))
-!(WeekendTest Sunday 0900 cloudy)
-;;cheat: (= (WeekendTest $day $time $conditions)
+!(WeekendTest2 Sunday 0900 cloudy)
+;;cheat: (= (WeekendTest2 $day $time $conditions)
 ;;cheat: (if (or (and (== $day Sunday) (< $time 1000)) (== $conditions cloudy))
 ;;cheat: (stay in bed)
 ;;cheat: (get up)))
-;;cheat: !(WeekendTest Sunday 0900 cloudy)
+;;cheat: !(WeekendTest2 Sunday 0900 cloudy)
 \end{verbatim}
 
 \subsubsection{case}
@@ -241,28 +241,28 @@ Suppose you have a function called "DevisePlan" which inputs a single argument, 
 
 Using \textbf{superpose} can generate lots of results. Real world problems likely require filtering, often using the \textbf{match} construct and other constraints, for context. MeTTa has a special expression \textbf{(empty)} which helps you discontinue results by particular context. 
 
-In the example below, the "EfficiencyPlan" function finds the atom "(efficiency not available)" using \textbf{match}. The execution argument in \textbf{match} below is the special \textbf{(empty)}. That means that nothing is returned from the first "EfficiencyPlan" and this option is filtered out of the results. The second definition of "EfficiencyPlan" (you can define a function more than once) will match and execute if you alter the first statement to "(efficiency available)" and rerun the code box.
+In the example below, the "EfficiencyPlan2" function finds the atom "(efficiency not available)" using \textbf{match}. The execution argument in \textbf{match} below is the special \textbf{(empty)}. That means that nothing is returned from the first "EfficiencyPlan2" and this option is filtered out of the results. 
 
 \begin{verbatim}
 (efficiency not available)      
 
-(= (SpeedPlan) (1st Plan Complete))
-(= (CostPlan) (2nd Plan Complete))
-(= (EfficiencyPlan) 
+(= (SpeedPlan2) (1st Plan Complete))
+(= (CostPlan2) (2nd Plan Complete))
+(= (EfficiencyPlan2) 
    (match &self (efficiency not available) (empty)))
-(= (EfficiencyPlan) 
+(= (EfficiencyPlan2) 
    (match &self (efficiency available) (3rd Plan Complete)))
 
 
-(= (DevisePlan $strategy)
+(= (DevisePlan2 $strategy)
    (case $strategy
           (
-          (Speed      (SpeedPlan))      
-          (LowCost    (CostPlan))       
-          (Efficiency (EfficiencyPlan)) 
+          (Speed      (SpeedPlan2))      
+          (LowCost    (CostPlan2))       
+          (Efficiency (EfficiencyPlan2)) 
           ($_         (Invalid))               ; OTHERWISE
           )))
-!(DevisePlan (superpose (Speed LowCost Efficiency)))
+!(DevisePlan2 (superpose (Speed LowCost Efficiency)))
 \end{verbatim}
 
 Any time you execute \textbf{(empty)} within a function execution will immediately stop and nothing is returned for the particular case at hand. \textbf{(empty)} is a quick filtering technique. The following function filters numbers, returning those passed less than 10. If a number fails the test condition \textbf{(empty)} halts execution for that particular call to "NumberCheck".
@@ -283,13 +283,13 @@ Any time you execute \textbf{(empty)} within a function execution will immediate
 \textbf{superpose} will return results in a format with values separated by commas. For example, "[2,3,5,1,0]" is returned from the example above. This format with values divided by commas is not easy for us to deal with programmatically in MeTTa, so we use \textbf{collapse} with eg "[2,3,5,1,0]" as the argument. This formats the results in an ordinary MeTTa expression in parenthesis "(2 3 5 1 0)". 
 
 \begin{verbatim}
-(= (NumberCheck $number)
+(= (NumberCheck2 $number)
    (if (< $number 10)
       $number
       (empty)
    )
 )
-!(collapse (NumberCheck (superpose (10 2 15 3 5 1 0 25))))
+!(collapse (NumberCheck2 (superpose (10 2 15 3 5 1 0 25))))
 \end{verbatim}
 
 Use of  \textbf{collapse} also prevents MeTTa from surreptitiously backing up and trying other variations in your code. As has been emphasized, MeTTa insists on executing all possible paths through your code. However if you use \textbf{collapse} you create a boundary -- after evaluation MeTTa will not back up and try some other avenue through your code!
