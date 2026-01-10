@@ -1,0 +1,795 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\title{MeTTa Components for a Simple Chess Game}
+\order{3}
+
+\begin{document}
+
+
+\section{How to Create a Simple Chess Game}
+
+Now armed with a few MeTTa constructs, we'll examine practical MeTTa software development. (If you have trouble viewing the wider examples try zooming out on your browser a bit -- usually CNTL/- works).
+
+\subsection{Atomspace Will Reset Automatically to the Greedy Chess Program}
+
+On this tutorial section page only, "MeTTa Components for a Simple Chess Game," whenever you click the "Run" button in a code experiment box the default chess program will re-initialize, wiping out your private atomspace and loading the chess program. This is just to make sure that the examples are consistent. You will notice an extra initialization result included in your MeTTa code box results. This can be safely ignored.
+
+\subsection{Backend MeTTa server}
+
+We will be using a backend MeTTa server running in the cloud. Gameplay is handled through your browser which sends only two commands to the backend MeTTa server: M and S which handle piece (M)oving and (S)tart/reset respectively. 
+
+\subsection{Program Components}
+
+The chess program is stored in atomspace using your browser (in a format maintained by the MeTTa server). We won't review all functions in the game, but rather only the most salient examples in the chess program that illustrate core programming ideas. However, in addition to displaying atomspace by clicking the button above, you can download the full source code by clicking on the "Your Turn to Improve the Game" section and look for the download link. 
+
+\subsubsection{Utility Functions}
+
+General utility functions are used anywhere throughout the program. These two examples include a standard LISP-ish looking recursion function and a case function. In MeTTa \textbf{car-atom} and \textbf{cdr-atom} (as well as \textbf{cons-atom}) are effectively the same as LISP but with -"atom" appended. If you need a refresher or crash course in these constructs an LLM would help. \textbf{car-atom} gives you the first symbol in a list while \textbf{cdr-atom} the rest of the list, still in parenthesis. The main trick is that you code the end boundary case and the general recursive
+case for items remaining in the list. Fortunately, you do less tail recursion searching in MeTTa than LISP but
+it is still a handy way of looping through a list.
+
+The "nth" function, below, is used constantly in the program to extract piece details.
+
+The chess program uses the following format universally for board squares:
+
+\textbf{(x y color piece)} (occupied square)
+
+\textbf{(x y)} (unoccupied square)
+
+If length is 4, the square is occupied. If length is 2, unoccupied. x and y are standard Cartesian coordinates.
+Piece color values are either s for silver (human) or g for gold (AI). Piece types are r, n, b, q, k, p for 
+rook, knight, bishop, queen, king, and pawn respectively.
+
+
+\begin{verbatim}
+; HIDE-RUN    
+;***************************************************************
+; Function:     nth
+; Description:  Returns the N-th element from a list (1-based index).
+;
+; Input:        $n     - The position (1-based) of the element to return.
+;               $list  - A list of elements (e.g., (a b c d)).
+;
+; Output:       The atom at position $n in the list. Returns the first element if n = 1.
+;***************************************************************
+(= (nth $n $list) 
+    (if (== $n 1)
+        (car-atom $list)
+        (nth (- $n 1) (cdr-atom $list)))) ; Recursion: move to the next element (cdr-atom) and decrease n.
+\end{verbatim}
+
+\begin{verbatim}
+
+; find x axis value for this silver pawn located in square (3, 2)
+!(nth 1 (3 2 s p))   
+
+; find the piece type
+!(nth 4 (3 2 s p))   
+\end{verbatim}
+
+The next example function, \textbf{int_to_char}, is a simple case statement to determine the x-axis letter that 
+corresponds to the numeric Cartesian x value. The program returns conventional letters for the chess x-axis to be displayed in the browser. Note that we can't use letters within the chess game for move computation -- only standard Cartesian (x y) coordinates are used.
+
+\begin{verbatim}
+
+; HIDE-RUN    
+;***************************************************************
+; Function:     int_to_char
+; Description:  Converts an integer 1..8 to the corresponding incremental letter.
+;
+; Input:        $int - Integer in range 1 to 8
+;
+; Output:       Corresponding file letter "a".."h", or "?" if invalid
+;***************************************************************
+(= (int_to_char $int)
+    (case $int
+        (
+        (1 A)
+        (2 B)
+        (3 C)
+        (4 D)
+        (5 E)
+        (6 F)
+        (7 G)
+        (8 H)
+        ($_ ?) ; fallback for invalid input
+        )))
+
+\end{verbatim}
+
+\begin{verbatim}
+
+;example int_to_char call        
+!(int_to_char 5)
+\end{verbatim}
+
+\subsubsection{Constants}
+
+An easy way to define constants is just by coding them. These can be looked up in the \textbf{&self} 
+space using \textbf{match}.
+
+\begin{verbatim}
+;HIDE-RUN
+;*******************************************************
+; Constants 
+;*******************************************************
+
+(highestrank k) 
+(highrank q) 
+(medrank r) 
+(medrank b) 
+(medrank n) 
+(lowrank p) 
+
+(rank k) 
+(rank q) 
+(rank r) 
+(rank b) 
+(rank n) 
+(rank p) 
+
+\end{verbatim}
+
+\begin{verbatim}
+
+;example to return all ranks in a list. You get all ranks because MeTTa insists on giving all the results!
+!(collapse (match &self (rank $rank) $rank))
+\end{verbatim}
+
+\subsubsection{Global Variables}
+
+The following expression adds an atom for game state. You can basically slip \textbf{de facto global variables} into your program just by declaration with the first symbol acting as the variable name and the second its value. In order to change its value you just remove the entire two symbol atom list and add back to atomspace with a different second symbol value. This is shown further below.
+
+\begin{verbatim}
+; HIDE-RUN
+;*******************************************************
+; Declare initializing game state
+; (game-state <value>) is a de facto global variable
+;*******************************************************
+
+(game-state initializing)
+
+\end{verbatim}
+
+\subsubsection{Reset Game State}
+
+The following two functions can be used to reset the value of our de facto global "game-state" variable.
+
+\begin{verbatim}
+; HIDE-RUN
+
+;***************************************************************
+; Function:     delete-prior-game-states
+; Description:  Removes any existing `(game-state ...)` atoms from atomspace.
+;               Used before setting a new game state.
+;
+; Input:        None
+;
+; Output:       Atomspace no longer contains any `game-state` atoms.
+;***************************************************************
+(= (delete-prior-game-states)
+    (collapse (match &self (game-state $prior-state) (remove-atom &self (game-state $prior-state))))
+)
+
+;***************************************************************
+; Function:     change-game-state
+; Description:  Resets the current game state and sets a new one.
+;
+; Input:        $new-state - A symbol representing the new game state,
+;                            e.g., `started`, `checkmate`, `restarted`, etc.
+;
+; Output:       Replaces any existing `game-state` atom with the new one.
+;***************************************************************
+(= (change-game-state $new-state)
+  (progn
+    (delete-prior-game-states) 
+    (add-atom &self (game-state $new-state))))
+
+\end{verbatim}
+
+Note that "delete-prior-game-states" above uses a \textbf{collapse} to ensure ALL prior game state atoms are removed. Think of \textbf{collapse} as your means to force MeTTa to evaluate what is enclosed within its expression for all possible results. If MeTTa returns all possible results, it will be satisifed and not try to back up later and find some other variation that was missed.
+
+After running this atomspace should show (game-state checkmate), and if you have your "Play Chess" tab open it should indicate.
+
+\begin{verbatim}
+
+!(change-game-state checkmate)
+
+\end{verbatim}
+
+
+\subsubsection{Creating Atoms for Fast Manipulation}
+
+The program persists two major data structures between moves. One is the chessboard state, the second game state:
+
+1) \textbf{(board-state (  (1 1 s r) (1 2 s n).... (4 4).... (1 8 g r)... ))} with 64 sublists
+
+2) \textbf{(game-state -value-)}
+
+The "board-state" list is not used as the data structure for searching. Instead, when the AI is experimenting with possible next moves, small standalone atoms in atomspace are created for each square of this form:
+
+\textbf{(square x y color rank) and (square x y)} to denote both occupied and unoccupied squares.
+
+The reason the longer "board-state" list of 64 elements representing all squares on the chessboard is \textbf{not} used for deep searches is because \textbf{METTA IS FASTER LOOKING UP INDIVIDUAL ATOMS THAN CHUGGING THROUGH LISTS.} A defining feature of MeTTa is random access in atomspace, not LISP-ish tail recursion search.
+
+The following functions are used for the input of the 64-element board list and output of temporary 
+corresponding atomic "square" (as above) atoms for all chess pieces. The deep searching in the program uses these 
+atomic "square" atoms for random access speed. 
+
+This example, the "add pieces" function, converts each square of our full 8 x 8 chessboard state list into individual atoms for quick lookup. Here we use the \textbf{let*} construct. Note that \textbf{cons-atom} inserts "square" into the individual, atomic square list. The third variable is a dummy variable, unused.
+
+
+\begin{verbatim}
+; HIDE-RUN
+;***************************************************************
+; Function:     add-pieces
+; Description:  Converts a board representation into atomspace facts.
+;               Each square from the board list becomes a `(square ...)` atom.
+;
+; Input:        $board - A list of square definitions:
+;                        Each square is either (x y) for empty or (x y color piece) if occupied.
+;
+; Output:       Adds each square to the atomspace as a `(square ...)` atom.
+;               Returns True after processing the entire board.
+;***************************************************************
+(= (add-pieces $board)
+  (if (== $board ())
+      True
+      (let* (
+            ($next-square (car-atom $board))
+            ($next-square-atom (cons-atom square $next-square))
+            ($_ (add-atom &self $next-square-atom))
+            )
+      (add-pieces (cdr-atom $board))))) ;recurse here to create a loop to process all squares 
+
+\end{verbatim}
+
+
+\begin{verbatim}
+
+; Here we call add-pieces to create individual square atoms for each piece. Display atomspace after running this command and you should see individual atoms of the form (square x y ...)
+!(add-pieces ((1 8 g r) (2 8 g n) (3 8 g b) (4 8 g q) (5 8 g k) (6 8 g b) (7 8 g n) (8 8 g r) 
+              (1 7 g p) (2 7 g p) (3 7 g p) (4 7 g p) (5 7 g p) (6 7 g p) (7 7 g p) (8 7 g p) 
+              (1 6)     (2 6)     (3 6)     (4 6)     (5 6)     (6 6)     (7 6)     (8 6) 
+              (1 5)     (2 5)     (3 5)     (4 5)     (5 5)     (6 5)     (7 5)     (8 5) 
+              (1 4)     (2 4)     (3 4)     (4 4)     (5 4)     (6 4)     (7 4)     (8 4) 
+              (1 3)     (2 3)     (3 3)     (4 3)     (5 3)     (6 3)     (7 3)     (8 3) 
+              (1 2 s p) (2 2 s p) (3 2 s p) (4 2 s p) (5 2 s p) (6 2 s p) (7 2 s p) (8 2 s p) 
+              (1 1 s r) (2 1 s n) (3 1 s b) (4 1 s q) (5 1 s k) (6 1 s b) (7 1 s n) (8 1 s r))   
+  )
+
+; display occupied squares
+!(collapse (match &self (square $x $y $color $piece) (square $x $y $color $piece)))
+
+; display unoccupied squares
+!(collapse (match &self (square $x $y) (square $x $y)))
+\end{verbatim}
+
+The "reset-pieces" function removes all the small "square" atoms and refreshes atomspace with a new set of "square" atoms using "add-pieces" and an input-supplied chessboard state.
+
+
+\begin{verbatim}
+; HIDE-RUN
+
+;***************************************************************
+; Function:     reset-pieces
+; Description:  Clears existing board state from atomspace and
+;               re-injects the current board list as square atoms.
+;
+; Input:        $board - The current board, as a list of square terms:
+;                        Each term is (x y) for empty, or (x y color rank) for occupied.
+;
+; Output:       Atomspace is updated with the board's square atoms.
+;***************************************************************
+(= (reset-pieces $board)
+    (progn
+      ; remove prior occupied square atoms from atomspace
+      (remove-atom &self (square $x $y $s $p))  
+      ; remove empty squares too
+      (remove-atom &self (square $x $y))  
+      ; now add the present board's squares to atomspace.
+      (add-pieces $board)))
+
+\end{verbatim}
+
+
+\begin{verbatim}
+; refresh the 'square' atoms using the input chessboard below. 
+; NOTE THERE HAS BEEN A MOVE WITH A PAWN IN SQUARE (4 4) 
+
+!(collapse (reset-pieces
+            ((1 8 g r) (2 8 g n) (3 8 g b) (4 8 g q) (5 8 g k) (6 8 g b) (7 8 g n) (8 8 g r) 
+             (1 7 g p) (2 7 g p) (3 7 g p) (4 7 g p) (5 7 g p) (6 7 g p) (7 7 g p) (8 7 g p) 
+             (1 6)     (2 6)     (3 6)     (4 6)     (5 6)     (6 6)     (7 6)     (8 6) 
+             (1 5)     (2 5)     (3 5)     (4 5)     (5 5)     (6 5)     (7 5)     (8 5) 
+             (1 4)     (2 4)     (3 4)     (4 4 s p) (5 4)     (6 4)     (7 4)     (8 4) 
+             (1 3)     (2 3)     (3 3)     (4 3)     (5 3)     (6 3)     (7 3)     (8 3) 
+             (1 2 s p) (2 2 s p) (3 2 s p) (4 2)     (5 2 s p) (6 2 s p) (7 2 s p) (8 2 s p) 
+             (1 1 s r) (2 1 s n) (3 1 s b) (4 1 s q) (5 1 s k) (6 1 s b) (7 1 s n) (8 1 s r))))
+; display occupied squares
+!(collapse (match &self (square $x $y $color $piece) (square $x $y $color $piece)))
+
+; display unoccupied squares
+!(collapse (match &self (square $x $y) (square $x $y)))
+
+\end{verbatim}
+
+
+\subsubsection{Retrieving Atoms Using Match and Collapse}
+
+In the following example function, "lots_of_pawns_in_home_row", there is a \textbf{match} construct used
+inside the second argument of \textbf{let} to find all AI gold pawns (designated with a 'g') in row 7, the AI home row for pawns. Notice that our
+friend the \textbf{collapse} encircles the match statement, as if saying "give me all the gold pawns in row 7 and don't return here for more execution later." The result of the second argument, a list of "square" atoms of the form (square x 7 g p) is assigned to the "pawns_at_home" variable. Then \textbf{size-atom} returns the length of the list and a check returns true or false. Again, we don't have to loop through a list searching for particular squares -- we just use the formula of a \textbf{match} working on atomspace within an enclosing \textbf{collapse}. 
+
+
+\begin{verbatim}
+; HIDE-RUN
+;***************************************************************
+; Function:     lots_of_pawns_in_home_row
+; Description:  Checks whether more than x AI (gold) pawns are still on row 7.
+;               Used to influence early-game move strategy.
+;
+; Input:        None
+;
+; Output:       True if more than x (see below) pawns remain on row 7 (initial position);
+;               otherwise False.
+;***************************************************************
+(= (lots_of_pawns_in_home_row)
+   (let $pawns_at_home (collapse (match &self (square $x 7 g p) (square $x $y $s $p)))
+        (if (> (size-atom $pawns_at_home) 6) ; <-- set here
+          True
+          False)))
+\end{verbatim}
+
+\begin{verbatim}
+
+; We intialize the program for starting board state. Then a call to search the "square" atoms will reveal more than 6 in the AI's starting row of pawns. If you take the "g" and "p" out of a few of the pawns designated in row 7 the function will return false.
+
+!(reset-pieces ((1 8 g r) (2 8 g n) (3 8 g b) (4 8 g q) (5 8 g k) (6 8 g b) (7 8 g n) (8 8 g r) 
+                (1 7 g p) (2 7 g p) (3 7 g p) (4 7 g p) (5 7 g p) (6 7 g p) (7 7 g p) (8 7 g p) 
+                (1 6)     (2 6)     (3 6)     (4 6)     (5 6)     (6 6)     (7 6)     (8 6) 
+                (1 5)     (2 5)     (3 5)     (4 5)     (5 5)     (6 5)     (7 5)     (8 5) 
+                (1 4)     (2 4)     (3 4)     (4 4)     (5 4)     (6 4)     (7 4)     (8 4) 
+                (1 3)     (2 3)     (3 3)     (4 3)     (5 3)     (6 3)     (7 3)     (8 3) 
+                (1 2 s p) (2 2 s p) (3 2 s p) (4 2 s p) (5 2 s p) (6 2 s p) (7 2 s p) (8 2 s p) 
+                (1 1 s r) (2 1 s n) (3 1 s b) (4 1 s q) (5 1 s k) (6 1 s b) (7 1 s n) (8 1 s r)))
+
+!(lots_of_pawns_in_home_row)
+
+\end{verbatim}
+
+\subsubsection{Use Match Not Ponderous Tail Recursion Wherever Possible!}
+
+
+The following function \textbf{xy_box} function contrast is another illustration of the difference between using match with collapse versus ponderous old school tail recursion search. The first version inputs the piece color (gold for AI, silver for player) and rank, and outputs coordinates for the location of all pieces that match. The first version is really all you need in MeTTa. 
+
+The second version displays the complexities of searching through lists with tail recursion.
+
+\begin{verbatim}
+; HIDE-RUN
+;***********************************************************************
+; Function:    xy_box
+; Description: Find the coordinates of a piece on the board.
+; Input:       A piece descriptor in the form: (color rank)
+; Output:      Coordinates (x y) where the piece is located
+;***********************************************************************
+(= (xy_box ($PieceColor $PieceRank))
+       (match &self (square $x $y $PieceColor $PieceRank) ($x $y))) 
+
+;***********************************************************************
+; obsolete comparison versions...
+;
+; (xy_box_recursive)
+;     1. Searches the board for a square containing the specified piece.
+;     2. Returns the x/y coordinates of the square if a match is found.
+;
+;***********************************************************************
+(= (xy_box_recursive ($PieceColor $PieceRank) $Board)
+  (let*
+    (
+    ; assign variables for the next piece
+    ($next_square (car-atom $Board)  )
+    ($next_x (nth 1 $next_square) )
+    ($next_y (nth 2 $next_square) )
+    )
+    ; then examine next square
+    (if (== (size-atom $next_square) 2) 
+      ; empty square, skip
+      (xy_box_recursive ($PieceColor $PieceRank) (cdr-atom $Board))
+      ; else check this piece
+      (let* (
+            ($next_color (nth 3 $next_square) )
+            ($next_rank  (nth 4 $next_square) )
+            )
+            (if
+              (and (== $next_color $PieceColor)
+                   (== $next_rank $PieceRank))
+                ; return x and y of the found piece
+                ($next_x $next_y)
+                ; else keep checking the board
+                (xy_box_recursive ($PieceColor $PieceRank) (cdr-atom $Board)))))))
+\end{verbatim}
+
+
+\begin{verbatim}
+
+!(reset-pieces ((1 8 g r) (2 8 g n) (3 8 g b) (4 8 g q) (5 8 g k) (6 8 g b) (7 8 g n) (8 8 g r) 
+                (1 7 g p) (2 7 g p) (3 7 g p) (4 7 g p) (5 7 g p) (6 7 g p) (7 7 g p) (8 7 g p) 
+                (1 6)     (2 6)     (3 6)     (4 6)     (5 6)     (6 6)     (7 6)     (8 6) 
+                (1 5)     (2 5)     (3 5)     (4 5)     (5 5)     (6 5)     (7 5)     (8 5) 
+                (1 4)     (2 4)     (3 4)     (4 4)     (5 4)     (6 4)     (7 4)     (8 4) 
+                (1 3)     (2 3)     (3 3)     (4 3)     (5 3)     (6 3)     (7 3)     (8 3) 
+                (1 2 s p) (2 2 s p) (3 2 s p) (4 2 s p) (5 2 s p) (6 2 s p) (7 2 s p) (8 2 s p) 
+                (1 1 s r) (2 1 s n) (3 1 s b) (4 1 s q) (5 1 s k) (6 1 s b) (7 1 s n) (8 1 s r)))
+
+; look for gold bishops using collapse and match
+!(collapse (xy_box (g b)))
+
+; look for gold bishops by search through supplied board; this version only finds 1 bishop.
+!(collapse (xy_box_recursive (g b)  
+      ((1 8 g r) (2 8 g n) (3 8 g b) (4 8 g q) (5 8 g k) (6 8 g b) (7 8 g n) (8 8 g r) 
+       (1 7 g p) (2 7 g p) (3 7 g p) (4 7 g p) (5 7 g p) (6 7 g p) (7 7 g p) (8 7 g p) 
+       (1 6)     (2 6)     (3 6)     (4 6)     (5 6)     (6 6)     (7 6)     (8 6) 
+       (1 5)     (2 5)     (3 5)     (4 5)     (5 5)     (6 5)     (7 5)     (8 5) 
+       (1 4)     (2 4)     (3 4)     (4 4)     (5 4)     (6 4)     (7 4)     (8 4) 
+       (1 3)     (2 3)     (3 3)     (4 3)     (5 3)     (6 3)     (7 3)     (8 3) 
+       (1 2 s p) (2 2 s p) (3 2 s p) (4 2 s p) (5 2 s p) (6 2 s p) (7 2 s p) (8 2 s p) 
+       (1 1 s r) (2 1 s n) (3 1 s b) (4 1 s q) (5 1 s k) (6 1 s b) (7 1 s n) (8 1 s r))
+      ))
+
+\end{verbatim}
+
+\subsubsection{The Same Function in Many Variations}
+
+\textbf{Chess Move Validation}
+
+We now turn to a single function named "clear_route", the program's core chess piece move validator. We'll take a look at definitions for just the king and queen below (the remainder can be viewed in the program).
+
+\begin{verbatim}
+; -HIDE-RUN
+
+; Function:    clear_route
+; Description: Validates whether a specific chess piece can legally move from a 
+;              source square to a destination square, based on the rules of 
+;              movement for each piece type. This function ensures that:
+;              - The move adheres to each piece's geometry (e.g., bishop diagonals, rook lines).
+;              - All intermediate squares (for sliding pieces) are unoccupied.
+;              - Pawn-specific rules (direction, captures, initial two-step) are honored.
+;
+; Input:       Two expressions:
+;              1. A piece located at a specific coordinate in the form: (x y color rank)
+;              2. A destination square in the form: (x y)
+;
+; Output:      Boolean (True if the route is legal and clear; otherwise False)
+;
+; Notes:       
+;   * Before calling this function, ensure that the source and destination are distinct,
+;     and that if the destination is occupied, it contains an opponent’s piece.
+;   * This function handles routing logic only. Occupancy checks must be performed externally.
+;   * Supports: king, queen, rook, bishop, knight, pawn (both silver and gold variants).
+
+\end{verbatim}
+
+In MeTTa \textbf{we can define a single function as many times in as many variations as needed}. The simple strategy is to define one version of the "clear_route" function specifically for each piece type. A list composed of the starting square x-coordinate, y-coordinate, piece color, and piece type is the first argument. The second argument is the desired destination (x y) square, whether occupied or unoccupied. If occupied, prior to calling "clear_route" we must ensure the destination is occupied by the opponent. If the move is valid return True. If an invalid move, return False. 
+
+Since the king can only move one square at a time in any direction, the "clear_route" definition for the king is relatively straightforward. A "k" is hard-coded in the first input parameter list along with variables for the x-coordinate and y-coordinate, so this version of the "clear_route" function will only be invoked if indeed the starting square is occupied by a king. 
+
+The "clear_route" functions in the chess program are a good exercise in MeTTa's functional style logic with the comparison operators appearing first. A code editor with colored and balanced parenthesis helps a lot to keep nesting straight.
+
+\textbf{let*} firstly creates and assigns variables for the coordinates of the destination square. The second argument of \textbf{let*} in this case is an \textbf{if} construct, and if true (ie., the king is moving one square only any direction), the \textbf{if} construct -- and thus the \textbf{let*} -- returns the symbol True, else returns the symbol False.
+
+\begin{verbatim}
+; HIDE-RUN
+; King: Moves one square in any direction.
+(= (clear_route ($X1 $Y1 $Color k) $destination)
+      (let*  (
+      ($X2 (nth 1 $destination) )  
+      ($Y2 (nth 2 $destination) )          
+             )
+      (if (and 
+         (or      
+          (== $X2 $X1)
+          (or 
+          (== $X2 (- $X1 1))
+          (== $X2 (+ $X1 1))
+          )) 
+         (or
+          (== $Y2 $Y1)
+          (or 
+          (== $Y2 (- $Y1 1))
+          (== $Y2 (+ $Y1 1))
+          )) 
+          )
+        True
+        False)))
+
+\end{verbatim}
+
+\begin{verbatim}
+
+; test if king can move up one square
+!(clear_route (4 1 s k) (4 2))
+
+; test if king can move diagonally a few squares like a bishop (no)
+!(clear_route (4 1 s k) (6 3))
+
+\end{verbatim}
+
+The "clear_route" function for the queen is defined in terms of being able to move like both the rook or bishop, as per the rules of chess.
+
+Important to note: some of the "clear_route" functions use the above "square" atoms for speed, as described, so prior to calling "clear_route" the "reset-pieces" function must be called (it happens that the "clear_route" version for the king above does not use the "square" atoms).
+
+\begin{verbatim}
+; HIDE-RUN
+; Queen:  Either rook or bishop move works.
+(= (clear_route ($X1 $Y1 $Color q) $destination)
+      (if (or (clear_route ($X1 $Y1 $Color b) $destination)
+               (clear_route ($X1 $Y1 $Color r) $destination))
+           True
+           False))
+
+
+\end{verbatim}
+
+\begin{verbatim}
+
+; reset the "square" small atoms with a board mock up so that queen can move orthogonally like a rook but is blocked by a pawn for a bishop type diagonal move. The board mock up is the starting board with a pawn that moved from (4 2) to (4 4) allowing a straight path for the queen.
+
+!(reset-pieces ((1 8 g r) (2 8 g n) (3 8 g b) (4 8 g q) (5 8 g k) (6 8 g b) (7 8 g n) (8 8 g r) 
+                (1 7 g p) (2 7 g p) (3 7 g p) (4 7 g p) (5 7 g p) (6 7 g p) (7 7 g p) (8 7 g p) 
+                (1 6)     (2 6)     (3 6)     (4 6)     (5 6)     (6 6)     (7 6)     (8 6) 
+                (1 5)     (2 5)     (3 5)     (4 5)     (5 5)     (6 5)     (7 5)     (8 5) 
+                (1 4)     (2 4)     (3 4)     (4 4 s p) (5 4)     (6 4)     (7 4)     (8 4) 
+                (1 3)     (2 3)     (3 3)     (4 3)     (5 3)     (6 3)     (7 3)     (8 3) 
+                (1 2 s p) (2 2 s p) (3 2 s p) (4 2)     (5 2 s p) (6 2 s p) (7 2 s p) (8 2 s p) 
+                (1 1 s r) (2 1 s n) (3 1 s b) (4 1 s q) (5 1 s k) (6 1 s b) (7 1 s n) (8 1 s r)))
+
+; test if queen can move orthogonally
+!(clear_route (4 1 s q) (4 2))
+
+; test if queen can move diagonally -- no since there is a pawn in (5 2) so no clear/valid path
+!(clear_route (4 1 s q) (8 5))
+
+\end{verbatim}
+
+\subsubsection{Decision Algorithm}
+
+\textbf{Core Chess Piece Move Decision Function}
+
+Below is the "decide_greedy_move" function, the main decision making function. The structure is a bit unusual but you can see intuitively that the AI will greedily try the most rewarding strategies first, starting with checkmate. 
+
+The entire decision process is contained within a single \textbf{let*} statement. If a strategy succeeds, the move is immediately returned, else another \textbf{let*} tries the next strategy in the \textbf{else} path of an \textbf{if}. (Indenting purists may argue that each strategy should be indented but it seems clear this way.)
+
+Each strategy code block calls its respective strategy function inside a \textbf{collapse} to ensure that all relevant results are returned and no further action taken by the strategy function. If the result is an empty list "()" that is deemed as a failure of the strategy. 
+
+Again, the "square" atoms, as discussed above, are used for envisioning potential moves.
+
+If all attempts fail, the AI is in a checkmate and the function simply gives up and returns "()".
+
+
+\begin{verbatim}
+; HIDE-RUN
+;***************************************************************
+; Function:     decide_greedy_move
+; Description:  Core decision-making logic for the AI's move.
+;               Attempts multiple strategies:
+;               1) Checkmate the human player
+;               2) Capture high-value enemy piece
+;               3) Defend a threatened AI piece
+;               4) Threaten a human piece position
+;               5) Make a legal random move
+;               6) If everything else fails, make a desperation type of move
+;
+; Input:        None (relies on current board state via atomspace "square" atoms)
+;
+; Output:       A move of the form ((x1 y1 g rank) (x2 y2)) or () if no move found.
+;***************************************************************
+(= (decide_greedy_move) 
+    ; make sure each move search call can either 
+    ;     1) succeed and return the move, or 
+    ;     2) fail and return ()
+    
+      ; Attempt checkmate first
+      (let* (
+        ($checkmate (collapse 
+                      (if (== (lots_of_pawns_in_home_row) True)
+                          ; get pieces out at beginning of game
+                          (empty)
+                          (attemptcheckmate))
+                    ))
+            )
+        (if (not (==  $checkmate ()))
+          (car-atom $checkmate)
+          
+      ; attempt capture high value open piece
+      (let* (
+        ($highest (collapse (takehighestopen_scored))))
+        (if (not (==  $highest ()))
+          (car-atom $highest)
+
+      ; play defensively by moving pieces out of path of human player
+      (let* (
+        ($position (collapse (playdefense)))
+          )
+        (if (not (==  $position ()))
+          (car-atom $position)
+
+      ; try to threaten a piece
+      (let* (
+        ($random_threat (random-int  &rng 1 2)) ; get a random number 1 through 2
+        ($threaten_position 
+                (if (> $random_threat 1)     
+                  (collapse (movetoposition))
+                  ; return empty parens and skip randomly
+                  ()
+                  ))
+                )
+        (if (not (==  $threaten_position ()))
+          (car-atom $threaten_position)
+
+      ; try a random move
+      (let* (
+        ($random_move (collapse (random_move_empty_sq)))
+              )
+        (if (not (==  $random_move ())) 
+          (car-atom $random_move)          
+
+      ; try a completely desperate move if that is all that's available (facing checkmate)
+      (let* (
+        ($random_moveD (collapse (random_move_empty_sq_desperate))))
+        (if (not (==  $random_moveD ())) 
+          (car-atom $random_moveD)  
+
+      ; if everything fails including desperation move, return empty list
+      ()
+          
+          )))))))))))))
+
+\end{verbatim}
+
+\begin{verbatim}
+
+; in this board mock-up, the silver queen in square (4 4) is covered by a gold rook in square (8 4), so the rook pounces.
+
+!(reset-pieces ((1 8 g r) (2 8 g n) (3 8 g b) (4 8 g q) (5 8 g k) (6 8 g b) (7 8 g n) (8 8) 
+                (1 7 g p) (2 7 g p) (3 7 g p) (4 7 g p) (5 7 g p) (6 7 g p) (7 7 g p) (8 7 g p) 
+                (1 6)     (2 6)     (3 6)     (4 6)     (5 6)     (6 6)     (7 6)     (8 6) 
+                (1 5)     (2 5)     (3 5)     (4 5)     (5 5)     (6 5)     (7 5)     (8 5) 
+                (1 4)     (2 4)     (3 4)     (4 4 s q) (5 4)     (6 4)     (7 4)     (8 4 g r) 
+                (1 3)     (2 3)     (3 3)     (4 3)     (5 3)     (6 3)     (7 3)     (8 3) 
+                (1 2 s p) (2 2 s p) (3 2 s p) (4 2) (5 2 s p) (6 2 s p) (7 2 s p) (8 2 s p) 
+                (1 1 s r) (2 1 s n) (3 1 s b) (4 1) (5 1 s k) (6 1 s b) (7 1 s n) (8 1 s r)))
+
+!(collapse (decide_greedy_move))
+
+\end{verbatim}
+
+\begin{verbatim}
+
+; in this board mock-up, the silver queen in square (4 4) is positioned to take a gold bishop in (4 5), so the bishop escapes.
+
+!(reset-pieces ((1 8 g r) (2 8 g n) (3 8) (4 8 g q) (5 8 g k) (6 8 g b) (7 8 g n) (8 8) 
+                (1 7 g p) (2 7 g p) (3 7 g p) (4 7 g p) (5 7 g p) (6 7 g p) (7 7 g p) (8 7 g p) 
+                (1 6)     (2 6)     (3 6)     (4 6)     (5 6)     (6 6)     (7 6)     (8 6) 
+                (1 5)     (2 5)     (3 5)     (4 5 g b) (5 5)     (6 5)     (7 5)     (8 5) 
+                (1 4)     (2 4)     (3 4)     (4 4 s q) (5 4)     (6 4)     (7 4)     (8 4) 
+                (1 3)     (2 3)     (3 3)     (4 3)     (5 3)     (6 3)     (7 3)     (8 3) 
+                (1 2 s p) (2 2 s p) (3 2 s p) (4 2)     (5 2 s p) (6 2 s p) (7 2 s p) (8 2 s p) 
+                (1 1 s r) (2 1 s n) (3 1 s b) (4 1)     (5 1 s k) (6 1 s b) (7 1 s n) (8 1 s r)))
+
+!(collapse (decide_greedy_move))
+
+\end{verbatim}
+
+\subsubsection{Containing Combinatorial Explosion}
+
+\textbf{Superpose -- Match -- Collapse}
+
+The following is a fairly in depth example showing MeTTa's ability to deal with lots of chess piece combinations.
+
+This function looks for a move that will threaten a silver piece (called via the decision algorithm above). It is invoked in this fashion:
+
+\textbf{!(collapse (movetoposition_match (superpose (q r n b p)) (superpose (k q r n b))))}
+
+The first \textbf{superpose} argument represents gold pieces available to move and the second all the pieces desired to capture. The call to "movetoposition_match" \textbf{tries all combinations of the above arguments exhaustively} (eg., can a rook threaten a night? Can a bishop threaten a queen? etc). 
+
+You could alternately do this but it's obvious this is much more work:
+
+\textbf{!(collapse (movetoposition_match q k))
+!(collapse (movetoposition_match q q))
+!(collapse (movetoposition_match q r))
+!(collapse (movetoposition_match q n))
+....}
+
+
+Inside the "movetoposition_match" function take note of all the conditions. Numerous \textbf{match} statements and various conditions are checked to ensure a desired positioning of pieces. If at any time an \textbf{empty} is executed, "movetoposition_match" immediately abandons the particular combination. The \textbf{empty} can be thought of as "when you hit this, stop immediately and return nothing."
+
+This processing is really the true heart of the power of MeTTa: to be able to test an enormous number of combinations, filtering the results quickly. You don't have to think in terms of chaining or backtracking either. Just code what you want to return.
+
+
+\begin{verbatim}
+; HIDE-RUN
+
+;*************************************************************************
+; Function:     movetoposition_match
+;
+; Description:  Finds all possible positions an AI piece can move to that 
+;               would place it in line to attack a human piece in the next move.
+;
+; Input:        
+;   - $AI_rank      : A gold (AI) piece type to move (e.g., q, r, n, b)
+;   - $targetrank   : A target human piece type to threaten (e.g., k, q, r, n, b)
+;
+; Output:       
+;   - List of potential moves: ( (start) (intermediate empty square) )
+;   - Only returns moves where the AI piece is *not* exposed after the move.
+;
+; Logic:
+;   1. Find AI piece of the given rank.
+;   2. Check if it can move to any empty square.
+;   3. From that new square, check if it threatens a human piece of $targetrank.
+;   4. Only retain moves that don't expose the AI piece to immediate capture.
+;
+; Safety: Provisional move simulation and rollback ensure Atomspace state integrity.
+;*************************************************************************
+(= (movetoposition_match $AI_rank $targetrank ) 
+    ; match all gold pieces (AI)
+    (match &self (square $x1 $y1 g $AI_rank)
+      ; match all empty squares
+     (match &self (square $x2 $y2)
+        ; if the gold piece has a route to an empty square
+        (if (== (clear_route ($x1 $y1 g $AI_rank) ($x2 $y2)) True)
+            ; now find all target human pieces available
+            (match &self (square $x3 $y3 s $targetrank)
+              ; if there is a route to target from new square
+              (if (== (clear_route ($x2 $y2 g $AI_rank) ($x3 $y3)) True)
+                    ; if AI piece is not exposed in new position
+                    (let*
+                          ( ;envision the move to empty square
+                            ($__1 (move_piece ($x1 $y1 g $AI_rank) ($x2 $y2)))
+                            ; see if exposed after moves
+                            ($exposed (take_dest ($x2 $y2) s))
+                            ; make sure king safe
+                            ($king_status (checkking g))
+                            ($__2 (reset_pieces ($x1 $y1 g $AI_rank) ($x2 $y2)))
+                          )
+                          (if (and (== $exposed False) (== $king_status False))
+                            ; success!
+                            (($x1 $y1 g $AI_rank) ($x2 $y2))
+                            (empty)))         ; empty cases return nothing
+                    (empty)
+              )
+            )
+          (empty)
+        ))))
+
+\end{verbatim}
+
+\begin{verbatim}
+
+; in this board mock-up, the silver queen in square (4 4) is positioned to be threatened by the gold knight in home position (2 8).
+
+!(reset-pieces ((1 8 g r) (2 8 g n) (3 8 g b) (4 8 g q) (5 8 g k) (6 8 g b) (7 8 g n) (8 8) 
+                (1 7 g p) (2 7 g p) (3 7 g p) (4 7 g p) (5 7 g p) (6 7 g p) (7 7 g p) (8 7 g p) 
+                (1 6)     (2 6)     (3 6)     (4 6)     (5 6)     (6 6)     (7 6)     (8 6) 
+                (1 5)     (2 5)     (3 5)     (4 5)     (5 5)     (6 5)     (7 5)     (8 5) 
+                (1 4)     (2 4)     (3 4)     (4 4 s q) (5 4)     (6 4)     (7 4)     (8 4) 
+                (1 3)     (2 3)     (3 3)     (4 3)     (5 3)     (6 3)     (7 3)     (8 3) 
+                (1 2 s p) (2 2 s p) (3 2 s p) (4 2)     (5 2 s p) (6 2 s p) (7 2 s p) (8 2 s p) 
+                (1 1 s r) (2 1 s n) (3 1 s b) (4 1)     (5 1 s k) (6 1 s b) (7 1 s n) (8 1 s r)))
+
+!(collapse (movetoposition_match (superpose (q r n b)) (superpose (k q r n b))))
+
+\end{verbatim}
+
+\subsubsection{Command Handler Functions for Gameplay}
+
+With the chess program operating as a server to the player's browser, only two commands to the backend MeTTa server are used: M and S which handle piece (M)oving and (S)tart/reset respectively. The M command moves the human player's piece, and if the move is successful, calls the G command (for "go") which runs the AI move. The S command will start or restart the game. For the sake of brevity these are not covered in detail here since we've already covered the major programming aspects.
+
+
+\end{document}

@@ -1,0 +1,376 @@
+\documentclass{article}
+
+% ----------- core mathematics -----------
+\usepackage{amsmath}   % align, split, cases, etc.
+\usepackage{amssymb}   % \mathbb, \mathcal, \leqslant, \geqslant ...
+\usepackage{amsfonts}  % blackboard bold, fraktur if desired
+\usepackage{graphicx}  % for future figures, even if none are included yet
+\usepackage{listings}  % for code examples
+\usepackage{hyperref}  % clickable cross-refs; load last
+\usepackage{mdframed}  % for boxed content
+
+% ----------- tables & arrays ------------
+\usepackage{array}     % extended column specifiers in tabular
+\usepackage{booktabs}  % nicer horizontal rules (optional; you may keep \hline)
+\usepackage{multirow}  % multi-row cells if you extend the tables later
+
+% ----------- layout & floats ------------
+\usepackage{geometry}  % easy margin control (defaults are fine; optional)
+\usepackage{caption}   % better caption spacing for tables/figures
+
+\title{You Only Need These Few Constructs}
+\order{2}
+
+\begin{document}
+
+\section{You Only Need These Few Constructs}
+
+\subsection{Minimalism}
+
+First some good news! Solid and potent MeTTa code can be built with only about a dozen fairly simple programming constructs. The possible downside though is that MeTTa, while a unique language, does look somewhat like LISP with nested, balanced parenthesis to mind. However, a bit of practice and an IDE that tracks parenthesis nesting with colors works wonders.
+
+Below is a crash course covering a few code constructs to add and manipulate atoms, assign variables, define rewrite rules, handle conditional execution, run a sequence of statements, loop, and manage the combinatorial explosion with the superpose, match, and collapse functions. 
+
+We'll use these in the chess game in the next section.
+
+Atomspace, where all MeTTa code and data reside, can be subdivided into sub-spaces. The default sub-space is known as \textbf{&self}. For this tutorial we'll just use \textbf{&self} although it is possible to create arbitrary spaces (eg., \textbf{&fancyatoms}). 
+
+After you run any example in this tutorial you can check your atomspace by clicking the button to display atomspace on top of each tutorial page. To tidy things up as you work through the examples click the button to reset atomspace. Refreshing your browser page will reset the examples and clear atomspace. Code boxes can also be reset individually and those with a challenge question will have a "Cheat" button if you just feel like displaying the answer.
+
+\subsection{Exclamation !}
+
+The exclamation point \textbf{!} will kick MeTTa into action. Think of it like the ignition on a car. If you submit an expression to MeTTa without a preceding exclamation point, MeTTa simply adds the expression to atomspace. But if you precede the expression with a "!", MeTTa executes the expression. Submit your entire program without an exclamation point and it is loaded into atomspace, ready to run. When you want to run it, submit to MeTTa something like "!(MainLoop)". Assuming you have a function like "(= (MainLoop) (action))" in your program, it runs. If you submit "(MainLoop)" without the "!" prefix MeTTa just adds "(MainLoop)" to atomspace and not much happens. Examples below should clarify this.
+
+\subsection{Atoms}
+
+The quickest way to add atoms to atomspace is by declaration in your program. The following example will add "(my declared atom)" to the \textbf{&self} sub-space. Note that if you declare atoms using this simple approach such atoms are placed in the \textbf{&self} sub-space only. When using this style to add atoms, simple declaration is enough -- there is no need to prefix the expression with "!".
+
+\begin{verbatim}
+(my declared atom)
+\end{verbatim}
+
+\subsubsection{add-atom}
+
+Another way of adding atoms is by using \textbf{add-atom} as in the following example. When you use \textbf{add-atom} it is necessary to specify the sub-space within atomspace (\textbf{&self} for the tutorial). In this example we need to prefix the statement with "!" to force MeTTa to execute the expression, to actually add "(my second declared atom)" to atomspace. 
+
+Try running the code example below both with and without the "!" prefix. By displaying and resetting atomspace after each run you can observe the difference. Again, prefixing with "!" will trigger immediate execution of the expression. Omission of the "!" prefix will add the entire expression to atomspace without execution. This is a subtle but important difference but easy to see by checking atomspace.
+
+
+\begin{verbatim}
+!(add-atom &self (my second declared atom))
+;; cheat: (add-atom &self (my second declared atom))
+\end{verbatim}
+
+\subsubsection{remove-atom}
+
+The basic format for removing atoms from atomspace is identical to \textbf{add-atom} except we use \textbf{remove-atom}. The following example first adds an atom. After you run the following code, check to see if "(my third atom)" is in atomspace. Then simply change \textbf{add-atom} to \textbf{remove-atom} in the code block (or click "Cheat") to delete "(my third atom)" from atomspace.  Run the changed code and then click to display atomspace. The "(my third atom)" atom will be removed. 
+
+\begin{verbatim}
+!(add-atom &self (my third atom))
+;; cheat: !(remove-atom &self (my third atom))
+\end{verbatim}
+
+\subsection{Variables}
+
+\subsubsection{let and let*}
+
+All variables in MeTTa are prefixed with the dollar sign. The \textbf{let} construct is useful for assigning values to variables and further computing. The first argument to \textbf{let} is the variable to be assigned a value, and the second argument its value. Lastly the third argument can make use of the variable. In the example below, the value of \$var1 is returned by the \textbf{let} statement.
+ 
+\begin{verbatim}
+!(let $var1 Lighthouse $var1)
+\end{verbatim}
+
+Expressions in the second and third arguments of \textbf{let} are evaluated, or "reduced," if MeTTa can find a way to further execute. In the above example the symbol "Lighthouse" was returned from the \textbf{let} construct since there was nothing left to evaluate or execute with just "Lighthouse" assigned to our variable. 
+
+In the example below the second argument's expression simply adds 1 and 1. The result 2 is assigned to \$var1, and then the third argument uses the variable (now with value 2) inside a small list atom. The value assigned to the variable is available to the third argument. The third argument is the result of the \textbf{let} construct.
+
+\begin{verbatim}
+!(let $var1 (+ 1 1) (result $var1))
+\end{verbatim}
+
+Challenge: modify the below code example so that "(result 2)" is added to atomspace.
+
+\begin{verbatim}
+!(let $var1 (+ 1 1) ???)
+;; cheat: !(let $var1 (+ 1 1) (add-atom &self (result $var1)))
+\end{verbatim}
+
+A fancier variation of the \textbf{let} construct is \textbf{let*}. The first argument to \textbf{let*} is a list of variables and their assignments. The second argument allows you to compute with any of the variables created in the first argument. In the example below two variables are each assigned their own values in the first argument list and then added together in the second argument to \textbf{let*}. The second argument is the result returned by the \textbf{let*} construct.
+
+It's important to note that in the \textbf{let*} construct you can reference variables anywhere inside the same \textbf{let*} after they are declared.
+
+\begin{verbatim}
+!(let*
+   ; first argument is a list of variables with their assigned values
+   ( ($var1  (+ 1 1))  ($var2  (+ 1 $var1) )  )
+   ; second argument is the result to be returned by let*
+   (+ $var1 $var2)
+   )  
+\end{verbatim}
+
+Challenge: modify the code block below to create another variable \$var3 with a value of 2. Return the result of \$var2 less \$var3.
+
+\begin{verbatim}
+!(let*
+   ( ($var1  (+ 1 1))  ($var2  (+ 1 $var1) ) ???? )
+   (- $var2 ??? )
+   )  
+;;cheat: !(let*
+;;cheat:      ( ($var1  (+ 1 1))  ($var2  (+ 1 $var1) )  ($var3 2))
+;;cheat:      (- $var2 $var3)
+;;cheat:    )  
+\end{verbatim}
+
+\subsubsection{match}
+
+You can use the \textbf{match} construct mixing variables and symbols to search for patterns in atomspace. The following example adds atoms "(Seattle is a large city)" and "(Ellensburg is a medium-sized city)" to atomspace. Then a \textbf{match} statement uses a variable named \$city to match the large city atom. The last argument, \$city, is returned as the result.
+ 
+\begin{verbatim}
+(Seattle is a large city)
+(Ellensburg is a medium-sized city)
+!(match &self ($city is a large city) $city)
+\end{verbatim}
+
+Challenge: Run the first code box below to add "(Leavenworth is a small city)" to atomspace. Verify that it is in atomspace. Modify the second code box below to find and then remove "(Leavenworth is a small city)" from atomspace. Check to verify it has been removed.
+
+\begin{verbatim}
+(Leavenworth is a small city)
+\end{verbatim}
+
+\begin{verbatim}
+!(match &self ???? ????)
+;;cheat: !(match &self (Leavenworth is a small city) (remove-atom &self (Leavenworth is a small city)))
+\end{verbatim}
+
+\subsection{Rewrites}
+
+Rewrite rules, also known as functions and equalities, also use variables, and have the distinct form of:
+
+\textbf{(= (pattern) (result))}
+
+The following example matches two variations of a light switch pattern. If called with the pattern of switch on, it returns the result off, and vice versa. Note that when the function is submitted to MeTTa, the function is added to atomspace, so if resubmitted, another copy of the function is added. If you run the code box twice the function will be in atomspace twice and be executed twice. You can use \textbf{remove-atom} to remove the function from the \&self space.
+
+\begin{verbatim}
+(= (switch $state) (if (== $state on) off on))
+!(switch on)
+\end{verbatim}
+
+Challenge: Create a function that rewrites the input pattern "(onions carrots halibut)" with the output result "(light meal)". Then invoke the function and return the result.
+
+\begin{verbatim}
+(= ??? ???)
+!(onions carrots halibut)
+;;cheat: (= (onions carrots halibut) (light meal))
+;;cheat: !(onions carrots halibut)
+\end{verbatim}
+
+\subsection{Conditionals}
+
+\subsubsection{if}
+
+With \textbf{if} statements MeTTa uses the functional style for conditional tests. Instead of coding "if \$a > 5..." as in a language like Python, place the test operator first, eg "(if (> \$a 5)...)" in MeTTa.  Multiple conditions result in expressions looking like the following example. The true execution path immediately follows the conditional test expression and the false second.
+
+\begin{verbatim}
+(= (WeekendTest $day $time)
+   (if (and (== $day Sunday) (< $time 1000))
+      (stay in bed)
+      (get up)))
+!(WeekendTest Sunday 0900)
+\end{verbatim}
+
+Challenge: modify the test so that if it is cloudy, one stays in bed regardless of day or time.
+
+
+\begin{verbatim}
+(= (WeekendTest $day $time $conditions)
+   (if ??? (and (== $day Sunday) (< $time 1000) ???)
+      (stay in bed)
+      (get up)))
+!(WeekendTest Sunday 0900 cloudy)
+;;cheat: (= (WeekendTest $day $time $conditions)
+;;cheat: (if (or (and (== $day Sunday) (< $time 1000)) (== $conditions cloudy))
+;;cheat: (stay in bed)
+;;cheat: (get up)))
+;;cheat: !(WeekendTest Sunday 0900 cloudy)
+\end{verbatim}
+
+\subsubsection{case}
+
+The \textbf{case} statement is fairly standard. The example below selects cases depending upon what state a game is in. If there is no match the "otherwise" condition is \$_ and will run "(Invalid)"
+
+\begin{verbatim}
+(= (Run_state $state)
+   (case $state
+          (
+          (start  (StartGame))             ; start game
+          (move   (MakeMove))              ; AI move
+          (reset  (Reset))                 ; Reset game
+          (quit   (Quit))                  ; Exit game
+          ($_     (Invalid))               ; OTHERWISE
+          )))
+!(Run_state move)
+\end{verbatim}
+
+\subsection{Combinations}
+
+So far we have looked at basically ordinary programming techniques, but the real power in MeTTa is its ability to sift and search through a massive number of possible combinations of code and data given some input. By default MeTTa insists on executing every possible path through your code. It returns all possible results in no particular order. It might sound like a mess but it's actually easy to manage this situation with some simple techniques that enable you, in general, to control a combinatorial explosion.
+
+A typical strategy with MeTTa is to use \textbf{superpose} to generate lots of possibilities, filter the results using \textbf{match} and conditional checks, and then \textbf{collapse} to halt the process and return the results in parenthesis. If you neglect to end the process with a \textbf{collapse} call, MeTTa might back up later in your code unexpectedly.
+
+\subsubsection{superpose}
+
+Suppose you have a function called "DevisePlan" which inputs a single argument, \$strategy. The possible values for \$strategy are "Speed," "LowCost," and "Efficiency." Each of these strategies has a unique function, here made simple. Using \textbf{superpose} allows you overload the "DevisePlan" function and return all three plans in one call -- it runs three times. Notice that "DevisePlan" is called with a \textbf{superpose} of all possible arguments, not with a single argument.
+
+\begin{verbatim}
+(= (SpeedPlan) (1st Plan Complete))
+(= (CostPlan) (2nd Plan Complete))
+(= (EfficiencyPlan) (3rd Plan Complete))
+
+(= (DevisePlan $strategy)
+   (case $strategy
+          (
+          (Speed      (SpeedPlan))             ; call SpeedPlan function above
+          (LowCost    (CostPlan))              ; call CostPlan
+          (Efficiency (EfficiencyPlan))        ; call EfficiencyPlan
+          ($_         (Invalid))               ; OTHERWISE
+          )))
+!(DevisePlan (superpose (Speed LowCost Efficiency)))
+\end{verbatim}
+
+\subsubsection{filtering}
+
+Using \textbf{superpose} can generate lots of results. Real world problems likely require filtering, often using the \textbf{match} construct and other constraints, for context. MeTTa has a special expression \textbf{(empty)} which helps you discontinue results by particular context. 
+
+In the example below, the "EfficiencyPlan" function finds the atom "(efficiency not available)" using \textbf{match}. The execution argument in \textbf{match} below is the special \textbf{(empty)}. That means that nothing is returned from the first "EfficiencyPlan" and this option is filtered out of the results. The second definition of "EfficiencyPlan" (you can define a function more than once) will match and execute if you alter the first statement to "(efficiency available)" and rerun the code box.
+
+\begin{verbatim}
+(efficiency not available)      
+
+(= (SpeedPlan) (1st Plan Complete))
+(= (CostPlan) (2nd Plan Complete))
+(= (EfficiencyPlan) 
+   (match &self (efficiency not available) (empty)))
+(= (EfficiencyPlan) 
+   (match &self (efficiency available) (3rd Plan Complete)))
+
+
+(= (DevisePlan $strategy)
+   (case $strategy
+          (
+          (Speed      (SpeedPlan))      
+          (LowCost    (CostPlan))       
+          (Efficiency (EfficiencyPlan)) 
+          ($_         (Invalid))               ; OTHERWISE
+          )))
+!(DevisePlan (superpose (Speed LowCost Efficiency)))
+\end{verbatim}
+
+Any time you execute \textbf{(empty)} within a function execution will immediately stop and nothing is returned for the particular case at hand. \textbf{(empty)} is a quick filtering technique. The following function filters numbers, returning those passed less than 10. If a number fails the test condition \textbf{(empty)} halts execution for that particular call to "NumberCheck".
+
+\begin{verbatim}
+(= (NumberCheck $number)
+   (if (< $number 10)
+      $number
+      (empty)
+   )
+)
+!(NumberCheck (superpose (10 2 15 3 5 1 0 25)))
+\end{verbatim}
+
+
+\subsubsection{collapse}
+
+\textbf{superpose} will return results in a format with values separated by commas. For example, "[2,3,5,1,0]" is returned from the example above. This format with values divided by commas is not easy for us to deal with programmatically in MeTTa, so we use \textbf{collapse} with eg "[2,3,5,1,0]" as the argument. This formats the results in an ordinary MeTTa expression in parenthesis "(2 3 5 1 0)". 
+
+\begin{verbatim}
+(= (NumberCheck $number)
+   (if (< $number 10)
+      $number
+      (empty)
+   )
+)
+!(collapse (NumberCheck (superpose (10 2 15 3 5 1 0 25))))
+\end{verbatim}
+
+Use of  \textbf{collapse} also prevents MeTTa from surreptitiously backing up and trying other variations in your code. As has been emphasized, MeTTa insists on executing all possible paths through your code. However if you use \textbf{collapse} you create a boundary -- after evaluation MeTTa will not back up and try some other avenue through your code!
+
+
+Challenge: Cloning the above code, input all days of the week and filter out weekend days, returning a list with Monday through Friday.
+
+\begin{verbatim}
+(= (DayCheck $day)
+   (if (??? (== $day Saturday) (== $day Sunday))
+      ???
+      $day
+   )
+)
+!(??? (DayCheck (??? (Monday Tuesday Wednesday Thursday Friday Saturday Sunday))))
+;;cheat: (= (DayCheck $day)
+;;cheat:   (if (or (== $day Saturday) (== $day Sunday))
+;;cheat:     (empty)
+;;cheat:     $day
+;;cheat:   )
+;;cheat: )
+;;cheat: !(collapse (DayCheck (superpose (Monday Tuesday Wednesday Thursday Friday Saturday Sunday))))
+\end{verbatim}
+
+\subsection{Controls}
+
+\subsubsection{loops}
+
+Looping can often be done with old school LISP-ish tail recursion. This function adds a list of passed numbers. MeTTa provides \textbf{car-atom}, \textbf{cdr-atom}, and \textbf{cons-atom} for manipulating lists.
+
+\begin{verbatim}
+(= (addit_list $integer_list)
+    (if (== $integer_list ())
+        0
+        (+ (car-atom $integer_list) (addit_list (cdr-atom $integer_list)))))
+!(addit_list (4 6 3))
+\end{verbatim}
+
+If at all possible, make your data structures simple one dimensional atom expressions in atomspace. Small atoms can be retrieved with random access using \textbf{match}.  If you use long lists and search with LISP-ish tail recursion in multiple dimensions MeTTa will have to perform sequential searches. Sequential search is slower than random access. Also, most people don't find tail recursion particularly easy to read. 
+
+Atoms and \textbf{match} are defining features of MeTTa. MeTTa is not LISP although it shares some similarities. Both versions below work but the first is preferable in MeTTa.
+
+\begin{verbatim}
+
+;small atoms for tools
+(tool hammer)
+(tool screwdriver)
+(tool saw)
+
+;random access lookup for small atoms, easy and fast!
+(= (find_tool_match $tool) (match &self (tool $tool) found))
+
+!(find_tool_match hammer)
+
+;----------------------------------
+
+;avoid searching through lists which is confusing looking and less efficient
+(= (find_tool_match_recursion $tool $list)
+    (if (== $list ())
+        (empty)
+        (if (== $tool (car-atom $list))
+            found
+            (find_tool_match_recursion $tool (cdr-atom $list)))))
+
+;don't use a list of tools: you'll have to search through it sequentially
+!(find_tool_match_recursion saw (hammer screwdriver saw))
+\end{verbatim}
+
+
+\subsubsection{sequences}
+
+Eventually every programmer needs to run a sequence of statements. \textbf{progn} is used to execute statements for side effects. The value returned is the result of the last expression.
+
+\begin{verbatim}
+(= (PrognTest)
+   (progn
+      (add-atom &self (progn test))   ;add a test atom
+      (match &self (progn $t) $t)     ;retrieve the atom and return "test"
+   )
+)
+!(PrognTest)
+\end{verbatim}
+
+\end{document}
