@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Menu } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { SearchBar } from "@/components/search-bar";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { DisplayAtomspaceButton } from "./display-atomspace-button";
@@ -17,7 +17,6 @@ export function SiteHeader() {
   const pathname = usePathname();
   // Show header actions on all sections/pages
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const mobileMenuRef = useRef<HTMLDivElement | null>(null);
   const [atomspaceEmpty, setAtomspaceEmpty] = useState<boolean>(() => {
     const val = (globalThis as any).Atomspace_state ?? ""
     const trimmed = (val || "").trim()
@@ -59,22 +58,6 @@ export function SiteHeader() {
     window.addEventListener("atomspace_state_updated", handler as EventListener)
     return () => window.removeEventListener("atomspace_state_updated", handler as EventListener)
   }, [])
-
-  useEffect(() => {
-    if (!mobileMenuOpen) return
-    const handleOutsideClick = (event: MouseEvent | TouchEvent) => {
-      if (!mobileMenuRef.current) return
-      if (!mobileMenuRef.current.contains(event.target as Node)) {
-        setMobileMenuOpen(false)
-      }
-    }
-    document.addEventListener("mousedown", handleOutsideClick)
-    document.addEventListener("touchstart", handleOutsideClick)
-    return () => {
-      document.removeEventListener("mousedown", handleOutsideClick)
-      document.removeEventListener("touchstart", handleOutsideClick)
-    }
-  }, [mobileMenuOpen])
 
   const handlePlayChess = async () => {
     if (typeof window === "undefined") return
@@ -168,27 +151,11 @@ export function SiteHeader() {
               <Menu className="h-5 w-5" />
             </Button>
             {mobileMenuOpen && (
-              <div
-                ref={mobileMenuRef}
-                className="absolute right-4 top-16 z-50 w-64 rounded-md border bg-background p-3 shadow-lg space-y-2"
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs w-full h-9"
-                  onClick={async () => {
-                    setMobileMenuOpen(false)
-                    await handlePlayChess()
-                  }}
-                >
+              <div className="absolute right-4 top-16 z-50 w-64 rounded-md border bg-background p-3 shadow-lg space-y-2">
+                <Button variant="outline" size="sm" className="text-xs w-full h-9" onClick={handlePlayChess}>
                   Play Chess
                 </Button>
-                <div
-                  className="w-full"
-                  onClick={() => {
-                    setMobileMenuOpen(false)
-                  }}
-                >
+                <div className="w-full">
                   <DisplayAtomspaceButton />
                 </div>
                 <Button
@@ -197,7 +164,6 @@ export function SiteHeader() {
                   className="text-xs w-full h-9"
                   disabled={atomspaceEmpty}
                   onClick={() => {
-                    setMobileMenuOpen(false)
                     ;(globalThis as any).Atomspace_state = ""
                     try {
                       window.localStorage.setItem("Atomspace_state", "")
