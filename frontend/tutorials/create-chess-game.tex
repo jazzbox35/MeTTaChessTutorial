@@ -143,7 +143,7 @@ space using \textbf{match}.
 
 \subsubsection{Global Variables}
 
-The following expression adds an atom for game state. You can basically slip \textbf{de facto global variables} into your program just by declaration with the first symbol acting as the variable name and the second its value. (Variables inside functions preceded by the dollar sign are just local to the function, not global.) In order to change its value you just remove the entire two symbol atom list and add back to atomspace with a different second symbol value. This is shown further below.
+The following expression adds an atom for game state. You can basically slip \textbf{de facto global variables} into your program just by declaration with the first symbol acting as the variable name and the second its value. (Variables inside functions prefixed with the dollar sign are just local to the function, not global.) In order to change its value you just remove the entire two symbol atom list and add back to atomspace with a different second symbol value. This is shown further below.
 
 \begin{verbatim}
 ; HIDE-RUN
