@@ -59,6 +59,35 @@ export function SiteHeader() {
     return () => window.removeEventListener("atomspace_state_updated", handler as EventListener)
   }, [])
 
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    if (pathname?.startsWith("/chess")) return
+    if (window.name === "atomspace_state") return
+    const resetMarker = "__metta_tutorial_reset_done__"
+    if (window.name === resetMarker) {
+      window.name = ""
+      return
+    }
+    // Clear cookies/local/session storage once, then reload fresh.
+    try {
+      document.cookie.split(";").forEach((c) => {
+        document.cookie = c
+          .replace(/^ +/, "")
+          .replace(/=.*/, "=;expires=" + new Date(0).toUTCString() + ";path=/")
+      })
+    } catch {
+      // ignore cookie errors
+    }
+    try {
+      window.localStorage.clear()
+      window.sessionStorage.clear()
+    } catch {
+      // ignore storage errors
+    }
+    window.name = resetMarker
+    window.location.reload()
+  }, [])
+
   const handlePlayChess = async () => {
     if (typeof window === "undefined") return
     if (atomspaceEmpty) {
