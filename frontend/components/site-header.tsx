@@ -181,10 +181,18 @@ export function SiteHeader() {
             </Button>
             {mobileMenuOpen && (
               <div className="absolute right-4 top-16 z-50 w-64 rounded-md border bg-background p-3 shadow-lg space-y-2">
-                <Button variant="outline" size="sm" className="text-xs w-full h-9" onClick={handlePlayChess}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs w-full h-9"
+                  onClick={() => {
+                    setMobileMenuOpen(false)
+                    handlePlayChess()
+                  }}
+                >
                   Play Chess
                 </Button>
-                <div className="w-full">
+                <div className="w-full" onClick={() => setMobileMenuOpen(false)}>
                   <DisplayAtomspaceButton />
                 </div>
                 <Button
@@ -193,6 +201,7 @@ export function SiteHeader() {
                   className="text-xs w-full h-9"
                   disabled={atomspaceEmpty}
                   onClick={() => {
+                    setMobileMenuOpen(false)
                     ;(globalThis as any).Atomspace_state = ""
                     try {
                       window.localStorage.setItem("Atomspace_state", "")
