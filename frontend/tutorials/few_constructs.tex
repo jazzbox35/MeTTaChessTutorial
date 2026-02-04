@@ -319,7 +319,7 @@ Challenge: Cloning the above code, input all days of the week and filter out wee
 
 \subsubsection{loops}
 
-Looping can often be done with old school LISP-ish tail recursion. This function adds a list of passed numbers. MeTTa provides \textbf{car-atom}, \textbf{cdr-atom}, and \textbf{cons-atom} for manipulating lists.
+Looping can often be done with old school LISP-ish recursion. This function adds a list of passed numbers. MeTTa provides \textbf{car-atom}, \textbf{cdr-atom}, and \textbf{cons-atom} for manipulating lists.
 
 \begin{verbatim}
 (= (addit_list $integer_list)
@@ -329,7 +329,7 @@ Looping can often be done with old school LISP-ish tail recursion. This function
 !(addit_list (4 6 3))
 \end{verbatim}
 
-If at all possible, make your data structures simple one dimensional atom expressions in atomspace. Small atoms can be retrieved with random access using \textbf{match}.  If you use long lists and search with LISP-ish tail recursion in multiple dimensions MeTTa will have to perform sequential searches. Sequential search is slower than random access. Also, most people don't find tail recursion particularly easy to read. 
+If at all possible, make your data structures simple one dimensional atom expressions in atomspace. Small atoms can be retrieved with random access using \textbf{match}.  If you use long lists and search with LISP-ish recursion in multiple dimensions MeTTa will have to perform sequential searches. Sequential search is slower than random access. Also, most people don't find recursion particularly easy to read. 
 
 Atoms and \textbf{match} are defining features of MeTTa. MeTTa is not LISP although it shares some similarities. Both versions below work but the first is preferable in MeTTa.
 

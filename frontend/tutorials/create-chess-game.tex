@@ -30,7 +30,7 @@ The chess program is stored in atomspace using your browser (in a format maintai
 \subsubsection{Utility Functions}
 
 General utility functions are used anywhere throughout the program. These two examples include a standard LISP-ish looking recursion function and a case function. In MeTTa \textbf{car-atom} and \textbf{cdr-atom} (as well as \textbf{cons-atom}) are effectively the same as LISP but with -"atom" appended. If you need a refresher or crash course in these constructs an LLM would help. \textbf{car-atom} gives you the first symbol in a list while \textbf{cdr-atom} the rest of the list, still in parenthesis. The main trick is that you code the end boundary case and the general recursive
-case for items remaining in the list. Fortunately, you do less tail recursion searching in MeTTa than LISP but
+case for items remaining in the list. Fortunately, you do less recursion searching in MeTTa than LISP but
 it is still a handy way of looping through a list.
 
 The "nth" function, below, is used constantly in the program to extract piece details.
@@ -215,7 +215,7 @@ The "board-state" list is not used as the data structure for searching. Instead,
 
 \textbf{(square x y color rank) and (square x y)} to denote both occupied and unoccupied squares.
 
-The reason the longer "board-state" list of 64 elements representing all squares on the chessboard is \textbf{not} used for deep searches is because \textbf{METTA IS FASTER LOOKING UP INDIVIDUAL ATOMS THAN CHUGGING THROUGH LISTS.} A defining feature of MeTTa is random access in atomspace, not LISP-ish tail recursion search.
+The reason the longer "board-state" list of 64 elements representing all squares on the chessboard is \textbf{not} used for deep searches is because \textbf{METTA IS FASTER LOOKING UP INDIVIDUAL ATOMS THAN CHUGGING THROUGH LISTS.} A defining feature of MeTTa is random access in atomspace, not LISP-ish  recursion search.
 
 The following functions are used for the input of the 64-element board list and output of temporary 
 corresponding atomic "square" (as above) atoms for all chess pieces. The deep searching in the program uses these 
@@ -363,12 +363,12 @@ friend the \textbf{collapse} encircles the match statement, as if saying "give m
 
 \end{verbatim}
 
-\subsubsection{Use Match Not Ponderous Tail Recursion Wherever Possible!}
+\subsubsection{Use Match Not Ponderous Recursion Wherever Possible!}
 
 
-The following function \textbf{xy_box} function contrast is another illustration of the difference between using match with collapse versus ponderous old school tail recursion search. The first version inputs the piece color (gold for AI, silver for player) and rank, and outputs coordinates for the location of all pieces that match. The first version is really all you need in MeTTa. 
+The following function \textbf{xy_box} function contrast is another illustration of the difference between using match with collapse versus ponderous old school recursion search. The first version inputs the piece color (gold for AI, silver for player) and rank, and outputs coordinates for the location of all pieces that match. The first version is really all you need in MeTTa. 
 
-The second version displays the complexities of searching through lists with tail recursion.
+The second version displays the complexities of searching through lists with recursion.
 
 \begin{verbatim}
 ; HIDE-RUN
