@@ -13,7 +13,7 @@
 ;   10/25      Modified for chess tutorial running under PeTTa.
 ;   12/25      Converted from console use to server use. The browser is the front end.
 ;              For the original console programs see the PeTTa and Mettalog repos.
-;
+;   02/26      Note: There are still some println! calls that can be used in console use.
 ;**********************************************************************
 ; * Redistribution and use in source and binary forms, with or without
 ; * modification, are permitted provided that the following conditions
@@ -2598,12 +2598,25 @@
                 ; else look for check...
                 (let $Check (checkking s)
                   (if (== $Check True)        
-                    (add-atom &self (game-message  CHECK!))
-                    (println "Your move.")))))
-            ; since move complete, delete any individual square atoms which only live for a single move.     
-            ;     "
+                    ; Look for either check or checkmate
+                    (let  
+                        ; Although checkmate is intentionally set in the attemptcheckmate routine,
+                        ; double-check here since a random move may cause side effect.
+                        $any_moves_left_whatsoever (collapse (any_moves_to_escape s))
+                        (if (== $any_moves_left_whatsoever ())
+                            ; set status to checkmate
+                            (progn (change-game-state checkmate) 
+                                   (add-atom &self (game-message  CHECKMATE!)))
+                            ; else check 
+                            (add-atom &self (game-message  CHECK!))))
+                    ;no check situation to report... just proceed w/ no messages.
+                    ())
+                )
+              )
+            )
           )
         )
+        ; since move complete, delete any individual square atoms which only live for a single move.     
         (progn (delete-pieces) 
           (let $msgout1 (Gold moves (int_to_char (nth 1 $start)) (nth 2 $start) (nth 4 $start)
                  --> (int_to_char (nth 1 $destination)) (nth 2 $destination))
