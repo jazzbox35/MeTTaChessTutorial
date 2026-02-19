@@ -9,11 +9,13 @@ export default function HomePage() {
           <div className="flex flex-col items-center justify-center space-y-8 text-center">
             <div className="space-y-4">
               <h1 className="text-4xl font-bold tracking-tighter sm:text-6xl md:text-7xl">
-                Create a Simple Chess Game in MeTTa
+                Explore how MeTTa makes it easy to handle vast possible combinations!
               </h1>
-              <p className="max-w-[800px] mx-auto text-lg text-muted-foreground md:text-xl">
-                Explore how the MeTTa language makes it easy to handle vast possible combinations!
-              </p>
+              <div className="max-w-[800px] mx-auto w-full rounded-lg border bg-background/70 p-4 shadow-sm">
+                <p className="text-left text-lg text-muted-foreground md:text-xl">
+                  Take a minimalist crash course in MeTTa, explore how a simple chess game is built with just a few core constructs, and optionally extend the MeTTa program with your own enhancements.
+                </p>
+              </div>
             </div>
             <div className="space-x-4 pt-6">
               <Link href="/tutorials">
