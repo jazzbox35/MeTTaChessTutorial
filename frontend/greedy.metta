@@ -10,10 +10,12 @@
 ;   Input:     Initialization and move MeTTa commands
 ;   Output:    Result of MeTTa commands and updated atomspace.
 ;
-;   10/25      Modified for chess tutorial running under PeTTa.
+;   02/26      Note: There are still some println! calls used in initial console app
+;              which won't affect the program when used as a backend server.
 ;   12/25      Converted from console use to server use. The browser is the front end.
-;              For the original console programs see the PeTTa and Mettalog repos.
-;   02/26      Note: There are still some println! calls that can be used in console use.
+;   10/25      Modified for chess tutorial running under PeTTa.
+;
+;   For the original console programs see the PeTTa and Mettalog repos.
 ;**********************************************************************
 ; * Redistribution and use in source and binary forms, with or without
 ; * modification, are permitted provided that the following conditions
@@ -458,7 +460,7 @@
 ;***************************************************************
 (= (display-game-state)
     (match &self (game-state $msg) 
-        (println $msg)))
+        (println!  $msg)))
 
 ;***************************************************************
 ; Function:     get-player-command
@@ -500,7 +502,6 @@
 ;
 ; Output:       A chess piece console symbol
 ;***************************************************************
-(: (identify_piece) (-> Expression Atom))
 (= (identify_piece $p) 
    (if (== (size-atom $p) 2)
       "."
@@ -524,7 +525,6 @@
 ;
 ; Output:       A string like "*k", " q", or "  " for rendering the board.
 ;***************************************************************
-(: (identify_piece_text) (-> Expression Atom))
 (= (identify_piece_text $p) 
    (if (== (size-atom $p) 2)
       "  "
@@ -546,7 +546,6 @@
 ;
 ; Output:       A list of symbols like ("*r" "*n" "  " " q" ...)
 ;***************************************************************
-(: (display_filter) (-> Expression Expression))
 (= (display_filter $brd) 
     (if (== (size-atom $brd) 1) 
       ; if on last piece, return a one element list of this form eg.:  (*k). Extra parens are needed to create list.
@@ -1502,7 +1501,7 @@
   (let*
     (
     ; assign variables for the next piece
-    ;($debug (println $PieceColor))
+    ;($debug (println!  $PieceColor))
     ($next_square (car-atom $Board)  )
     ($next_x (nth 1 $next_square) )
     ($next_y (nth 2 $next_square) )
@@ -1524,8 +1523,6 @@
                 ; else keep checking the board
                 (xy_box_recursive ($PieceColor $PieceRank) (cdr-atom $Board)))))))
   
-;(: (clear_route) (-> Expression Expression  Bool))
-
 ;*******************************************************************************
 ; Function:    clear_route
 ; Description: Validates whether a specific chess piece can legally move from a 
@@ -1785,11 +1782,6 @@
       )
       $RouteClearBool))
 
-;(: clearcheckup (-> Atom Atom Atom Bool))
-;(: clearcheckdown (-> Atom Atom Atom Bool))
-;(: clearcheckleft (-> Atom Atom Atom Bool))
-;(: clearcheckright (-> Atom Atom Atom Bool))
-
 ; These helper routines for the rook move work by testing for empty squares for the rook to pass to its destination.
 ; Sanity checks are included so we don't exceed the space on the board, and if so, return False.
 (= (clearcheckup $X $Y1 $Y2) 
@@ -1883,11 +1875,6 @@
       )
       $RouteClearBool))
 
-;(: clearcheckNE (-> Atom Atom Atom Atom Bool))
-;(: clearcheckSE (-> Atom Atom Atom Atom Bool))
-;(: clearcheckNW (-> Atom Atom Atom Atom Bool))
-;(: clearcheckSW (-> Atom Atom Atom Atom Bool))
-
 ; These helper routines for the bishop move work by testing for empty squares for the bishop to pass to its destination.
 ; Sanity checks are included so we don't exceed the space on the board, and if so, return False.
 (= (clearcheckNE $X1 $Y1 $X2 $Y2) 
@@ -1977,7 +1964,6 @@
 ; Output:       A new board list with the piece moved from ($X1 $Y1)
 ;               to ($X2 $Y2), and all other squares preserved.
 ;***************************************************************
-(: (replace_square_recursive) (-> Atom Atom Atom Atom Atom Atom Expression Expression))
 (= (replace_square_recursive $X1 $Y1 $color $rank $X2 $Y2 $current_board) 
    (if (== (size-atom $current_board) 0)
         ()
@@ -2033,9 +2019,9 @@
     ($starting_square_lettered (convert_x_letter $starting_square))
     ($target_square_lettered (convert_x_letter $target_square))
 
-    ($print0 (println ( ("Moving from: "
+    ($print0 (println!  ( ("Moving from: "
                           $starting_square_lettered " to: " $target_square_lettered))))
-    ;($print0 (println (format-args "Moving from: {} to: {}" 
+    ;($print0 (println!  (format-args "Moving from: {} to: {}" 
     ;    ($starting_square_lettered $target_square_lettered))))
     ($print1 (if (== (size-atom $target_square) 2)
              ()
@@ -2045,7 +2031,7 @@
              )
     ($print2 (if (== (size-atom $target_square) 2)
              ()
-             (println $target_square_lettered)))
+             (println!  $target_square_lettered)))
     ) 
     ; return new chessboard list
     $new_board))
@@ -2424,7 +2410,7 @@
         )
         (greedy:init)
         )
-    (; else if
+    (; otherwise
         empty))))) 
 
 ; Player move command. Input start square and destination. Call the AI move with the (G) command if move valid.
@@ -2479,7 +2465,7 @@
                       ;else
                       (progn 
                       ; re-create a new board 
-                      (println "Moving your piece...")
+                      (println!  "Moving your piece...")
                       (let $provisional_board (move_piece_on_board $h $i $starting_board)
                            (add-atom &self (board-state $provisional_board)))
                       ; remove the old chess board
@@ -2494,14 +2480,14 @@
                                 (if (== $any_moves_left_whatsoever ()) ;an empty list means no moves!
                                     ; if no moves possible for AI
                                     (progn
-                                      (println "Checkmate! You win!")
-                                      (println "Winner!  Winner!  Winner!")
-                                      (println "")
+                                      (println!  "Checkmate! You win!")
+                                      (println!  "Winner!  Winner!  Winner!")
+                                      (println!  "")
                                       (change-game-state checkmate)
                                     )
                                     (add-atom &self (game-message  CHECK!))))
                                     
-                              (println "Enter g for Greedy Chess move.")  ))
+                              (println!  "Enter g for Greedy Chess move.")  ))
                       )
                   )
               )
@@ -2534,13 +2520,12 @@
     )))
 
 ; AI move piece command
-;(: G (-> command))
 (= (G)  
   (match &self (game-state $msg)
   ; check for game over...  
     (if (or (==  checkmate   $msg) (==  resigned $msg)) 
       ; then  
-      (println "Game over. Please reset to play again (enter r).")
+      (println!  "Game over. Please reset to play again (enter r).")
       ;else keep playing...
       (progn 
         ; get the current board
@@ -2562,13 +2547,13 @@
             )
             (if (== $KingCompromised True)
               (progn
-                (println "Checkmate! You win!")
-                (println "Winner!  Winner!  Winner!")
-                (println "")
+                (println!  "Checkmate! You win!")
+                (println!  "Winner!  Winner!  Winner!")
+                (println!  "")
                 (change-game-state checkmate)
                 )
               (progn
-                (println "Greedy Chess cannot find a good move. Game over. You win!")
+                (println!  "Greedy Chess cannot find a good move. Game over. You win!")
                 (change-game-state resigned))))
           ; else proceed with move
           (progn
@@ -2578,7 +2563,7 @@
             (let $destination_entire (return_entire_box $destination) ())
             ; make the move in atomspace using the individual "square" atoms
             (move_piece $start $destination) ; the envision move persists in atomspace "square" atoms until end of routine.
-            (println "Greedy Chess moving...")
+            (println!  "Greedy Chess moving...")
             ; create atom for the updated complete chess board...
             (let $provisional_board (move_piece_on_board $start $destination_entire $starting_board)
                   (add-atom &self (board-state $provisional_board)))
@@ -2591,9 +2576,9 @@
             (match &self (game-state $msg2) 
               (if (==  checkmate   $msg2) 
                 (progn
-                            (println "Checkmate! Greedy Chess wins!!!")
-                            (println "Good game!")
-                            (println "")
+                            (println!  "Checkmate! Greedy Chess wins!!!")
+                            (println!  "Good game!")
+                            (println!  "")
                           )
                 ; else look for check...
                 (let $Check (checkking s)
