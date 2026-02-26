@@ -52,9 +52,9 @@ export default async function TutorialPage({ params }: Params) {
       <div className=" py-8">
 
         {/* Responsive Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_212px] gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-[280px_1fr] xl:grid-cols-[280px_1fr_212px] gap-6 items-start">
           
-       <SidebarWithTutorials allTutorials={allTutorials}/>
+       <SidebarWithTutorials allTutorials={allTutorials} showAllContentsHeading={false} />
           {/* Main Content - Always visible, adjusts width based on screen size */}
           <div className="min-w-0"> {/* min-w-0 prevents flex child from overflowing */}
             
@@ -153,11 +153,11 @@ export default async function TutorialPage({ params }: Params) {
           </div>
 
           {/* Right Sidebar: Table of Contents - Only visible on xl+ screens */}
-          <div className="hidden xl:block">
-            <div className="sticky top-32 h-[calc(100vh-8rem)] pt-2">
+          <div className="hidden xl:block self-start pt-6">
+            <div>
               <Card className="p-4">
                 <h3 className="text-lg font-semibold mb-3 text-foreground">On This Page</h3>
-                <ScrollArea className="h-[calc(100vh-16rem)] pr-4">
+                <ScrollArea key={slug} className="max-h-[70vh] pr-4">
                   <TableOfContents content={filteredContent} />
                 </ScrollArea>
               </Card>

@@ -22,8 +22,8 @@ export function TutorialList({ tutorials }: TutorialListProps) {
         mx-auto sm:mx-0
       "
     >
-      <ScrollArea className="h-[60vh] pr-2">
-        <div className="space-y-2">
+      <ScrollArea key={pathname} className="h-[60vh] pr-2">
+        <div className="space-y-2 pt-2">
           {tutorials.map((tut) => {
             const isActive = pathname === `/tutorials/${tut.slug}`
 
