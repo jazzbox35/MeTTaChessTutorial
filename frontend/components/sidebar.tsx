@@ -7,13 +7,9 @@ import { Tutorial } from "@/lib/tutorials"
 
 interface SidebarWithTutorialsProps {
   allTutorials: Tutorial[]
-  showAllContentsHeading?: boolean
 }
 
-export function SidebarWithTutorials({
-  allTutorials,
-  showAllContentsHeading = true,
-}: SidebarWithTutorialsProps) {
+export function SidebarWithTutorials({ allTutorials }: SidebarWithTutorialsProps) {
   return (
     <>
       {/* Mobile Hamburger Button */}
@@ -38,10 +34,8 @@ export function SidebarWithTutorials({
 
       {/* Desktop Sidebar */}
       <div className="hidden md:block">
-        <div className="h-[calc(100vh-6rem)] pt-2">
-          {showAllContentsHeading && (
-            <div className="text-sm font-semibold mb-2 text-foreground">All Contents</div>
-          )}
+        <div className="sticky top-24 h-[calc(100vh-6rem)]">
+          <div className="text-sm font-semibold mb-2 text-foreground">All Contents</div>
           <TutorialList tutorials={allTutorials} />
         </div>
       </div>
