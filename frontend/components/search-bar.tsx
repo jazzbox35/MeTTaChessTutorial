@@ -54,7 +54,7 @@ export function SearchBar() {
     <form onSubmit={handleSubmit} className="relative w-full">
       <Input
         type="search"
-        placeholder="Search tutorials..."
+        placeholder="search tutorial..."
         className="w-full pl-10 text-xs sm:text-sm "
         value={query}
         onChange={(e) => setQuery(e.target.value)}
