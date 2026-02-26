@@ -2612,22 +2612,23 @@
   )
 )
 
+; game start and replay
 (= (S) 
   (progn
     ; cleanup any game messages. 
     (collapse (match &self (game-message $msg) (remove-atom &self (game-message $msg))))
 
     (match &self (game-state $msg)
-      (if (or 
-            (or (==  resigned   $msg) (==  checkmate   $msg)) 
-            (==  started   $msg))
-        ; if game has been playing
+      (if (or (or (==  resigned   $msg) (==  checkmate   $msg)) (==  started   $msg))
+        ; if game has been playing, restart...
         (progn 
           (change-game-state restarted)
           (chess)
           )
-        ; if cold start
+        ; else if cold start...
         (chess)))))
 
-
+;***********************************************************
+; Execute the game start and replay function on initial load
+;***********************************************************
 !(S)
