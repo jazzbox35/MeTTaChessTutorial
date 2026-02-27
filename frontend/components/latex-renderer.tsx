@@ -24,6 +24,7 @@ export function LatexRenderer({ content, pageSlug }: LatexRendererProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const shouldResetWithGreedy = pageSlug === "create-chess-game";
+  const shouldEnableCodeboxHorizontalScroll = pageSlug === "create-chess-game";
 
   // Initialize MathJax for the entire content
   useEffect(() => {
@@ -87,6 +88,7 @@ export function LatexRenderer({ content, pageSlug }: LatexRendererProps) {
               showLineNumbers={false}
               codeId={globalCodeId++}
               resetWithGreedyBeforeRun={shouldResetWithGreedy}
+              enableHorizontalScroll={shouldEnableCodeboxHorizontalScroll}
             />
           </div>
         )}
@@ -172,6 +174,7 @@ export function LatexRenderer({ content, pageSlug }: LatexRendererProps) {
               hideRun={item.hideRun}
               readOnly={item.hideRun}
               resetWithGreedyBeforeRun={shouldResetWithGreedy}
+              enableHorizontalScroll={shouldEnableCodeboxHorizontalScroll}
             />
           </div>
         );

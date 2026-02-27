@@ -77,6 +77,7 @@ interface CodeEditorProps {
   cheatContent?: string
   cheatLabel?: string
   resetWithGreedyBeforeRun?: boolean
+  enableHorizontalScroll?: boolean
 }
 
 export function CodeEditor({
@@ -90,6 +91,7 @@ export function CodeEditor({
   cheatContent,
   cheatLabel = "Cheat",
   resetWithGreedyBeforeRun = false,
+  enableHorizontalScroll = false,
 }: CodeEditorProps) {
   const [code, setCode] = useState(initialCode)
   const [readOnly, setReadOnly] = useState(initialReadOnly || hideRun)
@@ -477,7 +479,9 @@ export function CodeEditor({
           {/* Syntax highlighted code display */}
           <pre
             ref={highlightRef}
-            className="w-full font-mono text-sm p-4 m-0 absolute top-0 left-0 right-0 bottom-0 pointer-events-none overflow-auto whitespace-pre-wrap"
+            className={`w-full font-mono text-sm p-4 m-0 absolute top-0 left-0 right-0 bottom-0 pointer-events-none overflow-auto ${
+              enableHorizontalScroll ? "whitespace-pre" : "whitespace-pre-wrap"
+            }`}
             style={{ lineHeight: "1.5" }}
           >
             {prismLoaded && code !== "" ? (
@@ -495,7 +499,10 @@ export function CodeEditor({
             onScroll={handleScroll}
             readOnly={readOnly}
             spellCheck={false}
-            className="w-full font-mono text-sm p-4 resize-none relative z-10 bg-transparent focus:outline-none focus:ring-0 focus:border-none"
+            wrap={enableHorizontalScroll ? "off" : "soft"}
+            className={`w-full font-mono text-sm p-4 resize-none relative z-10 bg-transparent focus:outline-none focus:ring-0 focus:border-none ${
+              enableHorizontalScroll ? "overflow-x-auto" : ""
+            }`}
             style={{
               lineHeight: "1.5",
               tabSize: 2,
