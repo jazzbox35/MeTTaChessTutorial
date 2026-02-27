@@ -45,7 +45,7 @@ export default function RootLayout({
             <footer className="border-t py-3 md:py-0">
               <div className=" flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
                 <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-                  © {new Date().getFullYear()} Chess tutorial. All
+                  © {new Date().getFullYear()} SingularityNET. All
                   rights reserved.
                 </p>
                 <div className="flex items-center gap-4"></div>
