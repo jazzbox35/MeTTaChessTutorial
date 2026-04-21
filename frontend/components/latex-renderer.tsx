@@ -5,6 +5,7 @@ import type { JSX } from "react/jsx-runtime";
 import { MathFormula } from "@/components/math-formula";
 import { useSearchParams } from "next/navigation";
 import { CodeEditor } from "@/components/code-editor";
+import { safelyTypesetMath } from "@/lib/mathjax";
 import type {
   BibliographyItem,
   LatexContent,
@@ -28,11 +29,8 @@ export function LatexRenderer({ content, pageSlug }: LatexRendererProps) {
 
   // Initialize MathJax for the entire content
   useEffect(() => {
-    if (contentRef.current && typeof window !== "undefined" && window.MathJax) {
-      window.MathJax.typesetPromise([contentRef.current]).catch((err) => {
-        console.error("MathJax typesetting failed:", err);
-      });
-    }
+    if (!contentRef.current) return;
+    void safelyTypesetMath([contentRef.current]);
   }, [content]);
 
   // Scroll to the section if hash is present

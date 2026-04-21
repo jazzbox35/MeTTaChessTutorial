@@ -20,10 +20,11 @@ interface Window {
     ) => string
   }
   MathJax: {
-    typesetPromise: (elements: Array<HTMLElement>) => Promise<any>
-    typeset: (elements: Array<HTMLElement>) => void
-    tex2chtml: (tex: string, options?: any) => HTMLElement
+    typesetPromise?: (elements: Array<HTMLElement>) => Promise<any>
+    typeset?: (elements: Array<HTMLElement>) => void
+    tex2chtml?: (tex: string, options?: any) => HTMLElement
     startup: {
+      promise?: Promise<any>
       defaultPageReady: () => Promise<any>
     }
     [key: string]: any

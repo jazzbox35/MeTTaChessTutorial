@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { safelyTypesetMath } from "@/lib/mathjax"
 
 interface DirectMathProps {
   formula: string
@@ -11,13 +12,10 @@ export function DirectMath({ formula, className = "" }: DirectMathProps) {
   const mathRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (mathRef.current && typeof window !== "undefined" && window.MathJax) {
-      mathRef.current.textContent = formula
+    if (!mathRef.current) return
 
-      window.MathJax.typesetPromise([mathRef.current]).catch((err) => {
-        console.error("MathJax typesetting failed:", err)
-      })
-    }
+    mathRef.current.textContent = formula
+    void safelyTypesetMath([mathRef.current])
   }, [formula])
 
   return <div ref={mathRef} className={`math-formula ${className}`} />
