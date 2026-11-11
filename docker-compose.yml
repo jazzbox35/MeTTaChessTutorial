@@ -25,6 +25,12 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: metta-frontend
+    user: "node"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     depends_on:
       - backend
     ports:
