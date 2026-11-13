@@ -8,3 +8,17 @@ To run the MeTTa Chess Tutorial on your machine follow these steps:
 4) `docker compose up -d`
 5) Start tutorial by opening your browser and enter `http://localhost:3000/`
 6) When you are done, `docker compose stop` 
+
+## Frontend development
+
+Use Node.js 26 LTS and pnpm 12.18.0 (also recorded in `frontend/package.json`).
+
+```sh
+cd frontend
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Run `pnpm typecheck`, `pnpm build`, and `pnpm lint` to validate changes.
+TypeScript 7 runs the standalone type check; the TypeScript 6 compatibility API
+is installed alongside it for ESLint and other compiler API consumers.

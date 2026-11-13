@@ -500,7 +500,7 @@ export function CodeEditor({
             readOnly={readOnly}
             spellCheck={false}
             wrap={enableHorizontalScroll ? "off" : "soft"}
-            className={`w-full font-mono text-sm p-4 resize-none relative z-10 bg-transparent focus:outline-none focus:ring-0 focus:border-none ${
+            className={`w-full font-mono text-sm p-4 resize-none relative z-10 bg-transparent focus:outline-hidden focus:ring-0 focus:border-none ${
               enableHorizontalScroll ? "overflow-x-auto" : ""
             }`}
             style={{
@@ -555,7 +555,7 @@ export function CodeEditor({
                 ref={resultTextareaRef}
                 value={getResultContent()}
                 readOnly
-                className={`w-full font-mono text-sm p-4 resize-none focus:outline-none cursor-default bg-background ${
+                className={`w-full font-mono text-sm p-4 resize-none focus:outline-hidden cursor-default bg-background ${
                   isExecuting ? "text-gray-500 dark:text-gray-400" : ""
                 }`}
                 style={{

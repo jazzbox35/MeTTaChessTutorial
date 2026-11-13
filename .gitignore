@@ -1,3 +1,6 @@
 .vercel
 .nvenv
 
+node_modules/
+.next/
+*.tsbuildinfo

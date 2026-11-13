@@ -67,7 +67,7 @@ export function SplitDemo() {
         </Button>
         {error && <span className="text-sm text-red-500">{error}</span>}
       </div>
-      <pre className="text-sm whitespace-pre-wrap rounded border p-3 bg-muted">
+      <pre className="text-sm whitespace-pre-wrap rounded-sm border p-3 bg-muted">
 {output || "Result will appear here."}
       </pre>
     </div>

@@ -89,7 +89,7 @@ export function SearchTest() {
                   <p className="text-sm text-muted-foreground mb-2">{result.description}</p>
 
                   {result.matchContext && (
-                    <div className="bg-muted p-2 rounded text-sm font-mono mt-2 whitespace-pre-wrap">
+                    <div className="bg-muted p-2 rounded-sm text-sm font-mono mt-2 whitespace-pre-wrap">
                       <p className="text-xs text-muted-foreground mb-1">Match context:</p>
                       {result.matchContext}
                     </div>

@@ -24,8 +24,9 @@ export async function safelyTypesetMath(elements: MathJaxElement[]): Promise<voi
 
     if (mathJax.startup?.promise) {
       await mathJax.startup.promise
-      if (typeof mathJax.typesetPromise === "function") {
-        await mathJax.typesetPromise(elements)
+      const readyMathJax = window.MathJax as MathJaxLike | undefined
+      if (typeof readyMathJax?.typesetPromise === "function") {
+        await readyMathJax.typesetPromise(elements)
         return
       }
     }

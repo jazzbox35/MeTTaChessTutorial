@@ -1,13 +1,13 @@
-FROM node:20-slim
+FROM node:26-slim
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable && corepack prepare pnpm@10.23.0 --activate
+RUN npm install --global pnpm@12.18.0
 
 WORKDIR /app
 COPY . .
 
-RUN pnpm install
+RUN pnpm install --frozen-lockfile
 RUN pnpm build
 
 CMD ["node", "node_modules/next/dist/bin/next", "start"]

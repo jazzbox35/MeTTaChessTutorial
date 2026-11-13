@@ -540,7 +540,7 @@ export function ChessClient() {
         </div>
       )}
       {gameState && gameState.toLowerCase().includes("checkmate") && (
-        <div className="w-full flex items-center justify-center py-2 rounded bg-red-600 text-white text-lg font-bold animate-pulse">
+        <div className="w-full flex items-center justify-center py-2 rounded-sm bg-red-600 text-white text-lg font-bold animate-pulse">
           CHECKMATE!
         </div>
       )}

@@ -26,13 +26,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* MathJax CSS */}
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/mathjax@3/es5/output/chtml.css"
-        />
-      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AtomspaceListener />
@@ -87,7 +80,7 @@ export default function RootLayout({
 
         {/* MathJax Script */}
         <Script
-          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+          src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"
           strategy="afterInteractive"
           id="mathjax-script"
         />

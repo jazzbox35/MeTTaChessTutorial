@@ -36,7 +36,7 @@ export function PseudocodeRenderer({
             value={code}
             readOnly
             spellCheck={false}
-            className="w-full font-mono text-sm p-4 resize-none bg-background cursor-default focus:outline-none"
+            className="w-full font-mono text-sm p-4 resize-none bg-background cursor-default focus:outline-hidden"
             style={{
               lineHeight: "1.5",
               tabSize: 2,

@@ -14,9 +14,9 @@ import { SidebarWithTutorials } from "@/components/sidebar"
 import { UploadAtomspaceButton } from "@/components/upload-atomspace-button"
 
 type Params = {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 };
 
 export default async function TutorialPage({ params }: Params) {
@@ -167,7 +167,7 @@ export default async function TutorialPage({ params }: Params) {
       </div>
     )
   } catch (error) {
-    const { slug } = params
+    const { slug } = await params
     console.error(`Error loading tutorial ${slug}:`, error)
     notFound()
   }
