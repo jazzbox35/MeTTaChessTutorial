@@ -51,6 +51,17 @@ export default function RootLayout({
         <Script id="mathjax-config" strategy="beforeInteractive">
           {`
             window.MathJax = {
+              loader: {
+                paths: {
+                  mathjax: '/mathjax',
+                  fonts: '/mathjax/fonts',
+                  sre: '/mathjax/sre',
+                  mathmaps: '/mathjax/sre/mathmaps'
+                }
+              },
+              output: {
+                fontPath: '/mathjax/fonts/%%FONT%%-font'
+              },
               tex: {
                 inlineMath: [['\\\$', '\\\$']],
                 displayMath: [['\\\\[', '\\\\]'], ['$$', '$$']],
@@ -80,7 +91,7 @@ export default function RootLayout({
 
         {/* MathJax Script */}
         <Script
-          src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"
+          src="/mathjax/tex-mml-chtml.js"
           strategy="afterInteractive"
           id="mathjax-script"
         />

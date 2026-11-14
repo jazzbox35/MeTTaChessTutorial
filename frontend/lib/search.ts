@@ -40,8 +40,6 @@ export async function searchRawLatexFiles(query: string): Promise<SearchResult[]
     const files = await fs.readdir(tutorialsDirectory)
     const texFiles = files.filter((file) => file.endsWith(".tex"))
 
-    console.log(`Found ${texFiles.length} .tex files to search`)
-
     const results: SearchResult[] = []
 
     // Search through each file
@@ -51,15 +49,10 @@ export async function searchRawLatexFiles(query: string): Promise<SearchResult[]
         const content = await fs.readFile(filePath, "utf8")
         const slug = file.replace(/\.tex$/, "")
 
-        console.log(`Searching in file: ${file}`)
-
         // If the query doesn't appear anywhere in the file, skip it
         if (!content.toLowerCase().includes(normalizedQuery)) {
-          console.log(`Query "${normalizedQuery}" not found in ${file}`)
           continue
         }
-
-        console.log(`Query "${normalizedQuery}" found in ${file}`)
 
         // Extract basic metadata
         let title = slug
@@ -202,7 +195,6 @@ export async function searchRawLatexFiles(query: string): Promise<SearchResult[]
           matchContext,
         })
 
-        console.log(`Added result for ${file} with relevance ${relevance}`)
       } catch (error) {
         console.error(`Error searching file ${file}:`, error)
       }

@@ -20,5 +20,7 @@ pnpm dev
 ```
 
 Run `pnpm typecheck`, `pnpm build`, and `pnpm lint` to validate changes.
+`pnpm dev` and `pnpm build` copy the pinned MathJax browser components and fonts
+into the generated `frontend/public/mathjax` directory for local serving.
 TypeScript 7 runs the standalone type check; the TypeScript 6 compatibility API
 is installed alongside it for ESLint and other compiler API consumers.
