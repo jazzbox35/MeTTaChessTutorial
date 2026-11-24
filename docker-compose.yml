@@ -3,7 +3,6 @@ services:
     image: trueagi/mwj:amd64
     container_name: backend
     command: stateless_only
-    pull_policy: always
     user: "65534:65534"
     read_only: true
     cap_drop:
