@@ -43,8 +43,13 @@ export async function getAllTutorialSlugs(): Promise<string[]> {
 
 // Get tutorial data by slug
 export async function getTutorialBySlug(slug: string): Promise<Tutorial | null> {
+  if (!slug || slug.includes("/") || slug.includes("\\")) return null
+
   try {
-    const filePath = path.join(tutorialsDirectory, `${slug}.tex`)
+    const directory = await fs.realpath(tutorialsDirectory)
+    const filePath = await fs.realpath(path.join(directory, `${slug}.tex`))
+    if (path.dirname(filePath) !== directory) return null
+
     const fileContent = await fs.readFile(filePath, "utf8")
 
     // Parse the LaTeX content with proper typing
